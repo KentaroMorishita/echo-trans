@@ -1,34 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react"
+import AudioRecorder from "./components/AudioRecorder"
+import TranslationPane from "./components/TranslationPane"
+import LanguageSelector from "./components/LanguageSelector"
+import useWebSocket from "./hooks/useWebSocket"
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [fromText, setFromText] = useState("")
+  const [toText, setToText] = useState("")
+  const [fromLang, setFromLang] = useState("ja")
+  const [toLang, setToLang] = useState("vi")
+
+  const messages = useWebSocket("ws://localhost:8080")
+
+  const handleAudioData = async (data: Blob) => {
+    try {
+      const formData = new FormData()
+      formData.append("audio", data)
+      formData.append("from", fromLang)
+      formData.append("to", toLang)
+
+      const response = await fetch("/api/whisper", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+      setFromText(result.fromText)
+    } catch (error) {
+      console.error("音声処理エラー:", error)
+    }
+  }
+
+  if (messages.length > 0) {
+    setToText(messages[messages.length - 1])
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-scree bg-gray-200 p-4">
+      <h1 className="text-2xl font-bold mb-4">PAX Translation System</h1>
+
+      <div className="flex space-x-4 mb-4 items-center">
+        {/* prettier-ignore */}
+        <LanguageSelector label="From" value={fromLang} onChange={setFromLang} />
+        <LanguageSelector label="To" value={toLang} onChange={setToLang} />
+        <AudioRecorder onAudioData={handleAudioData} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      <TranslationPane
+        from={fromText}
+        to={toText}
+        fromLabel="From"
+        toLabel="To"
+      />
+    </div>
   )
 }
 
