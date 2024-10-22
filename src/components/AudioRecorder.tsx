@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 
 type Props = {
   onAudioData: (data: Blob) => void
@@ -6,15 +6,42 @@ type Props = {
 
 const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   const [isRecording, setIsRecording] = useState(false)
+  const [audioURL, setAudioURL] = useState<string | null>(null) // デバッグ用の音声URL
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
-  const startRecording = () => {
-    setIsRecording(true)
-    // 音声録音のロジックを追加予定
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data)
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        })
+        setAudioURL(URL.createObjectURL(audioBlob)) // デバッグ用にURLを生成
+        onAudioData(audioBlob)
+      }
+
+      mediaRecorder.start()
+      setIsRecording(true)
+    } catch (error) {
+      console.error("マイクアクセスエラー:", error)
+    }
   }
 
   const stopRecording = () => {
-    setIsRecording(false)
-    // 音声データを取得し、onAudioDataに渡すロジックを追加予定
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+    }
   }
 
   return (
@@ -42,7 +69,13 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
         Stop Recording
       </button>
 
-      {/* パルスアニメーション */}
+      {/* デバッグ用のaudioタグ */}
+      {audioURL && (
+        <div>
+          <audio controls src={audioURL}></audio>
+        </div>
+      )}
+
       {isRecording && (
         <div className="ml-4 h-4 w-4 bg-red-500 rounded-full animate-pulse"></div>
       )}
