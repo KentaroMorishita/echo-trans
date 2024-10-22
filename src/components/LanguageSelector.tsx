@@ -9,8 +9,8 @@ type Props = {
 const LanguageSelector: React.FC<Props> = ({ label, value, onChange }) => {
   return (
     <>
-      <div className="flex items-center">
-        <label className="block font-semibold pr-2">{label}:</label>
+      <div>
+        <label className="block font-semibold mb-2">{label}:</label>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
