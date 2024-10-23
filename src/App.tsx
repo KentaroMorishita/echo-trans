@@ -11,7 +11,7 @@ import { TranslationHistory } from "./services/types"
 const App: React.FC = () => {
   const [apiKey, setApiKey] = useState("")
   const [fromLang, setFromLang] = useState("ja")
-  const [toLang, setToLang] = useState("vi")
+  const [toLang, setToLang] = useState("en")
   const [translations, setTranslations] = useState<TranslationHistory[]>([])
   const [isPanelVisible, setIsPanelVisible] = useState(true)
 
@@ -56,7 +56,7 @@ const App: React.FC = () => {
                   .then((data) => checkApiKey(apiKey, data))
                   .then((data) => handleAudioData(data, apiKey, (text) => text))
                   .then((text) => handleTranslation(text, apiKey, fromLang, toLang))
-                  .then((history) => setTranslations((prev) => [...prev, history]))
+                  .then((history) => setTranslations((prev) => [history, ...prev]))
                   .catch((error) => console.error(error))
               }
             />

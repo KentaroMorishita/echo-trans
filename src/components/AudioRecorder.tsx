@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
-import { FaMicrophone, FaStop } from "react-icons/fa"
+import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
 
 type Props = {
   onAudioData: (data: Blob) => void
@@ -14,8 +14,21 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   const audioChunksRef = useRef<Blob[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null) // GainNodeの参照を追加
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animationFrameIdRef = useRef<number | null>(null)
+
+  // VAD関連の状態
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const isSpeakingRef = useRef<boolean>(false) // isSpeakingの最新状態を保持
+  const speechStartRef = useRef<number | null>(null)
+  const silenceTimerRef = useRef<number | null>(null) // 無音検出用のタイマー
+
+  // 閾値設定（必要に応じて調整）
+  const SPEAKING_THRESHOLD = 20 // 音声開始を判定する高めの閾値
+  const SILENCE_THRESHOLD = 10 // 音声終了を判定する低めの閾値
+  const MIN_SPEECH_DURATION = 500 // ミリ秒単位で音声と判定する最小期間
+  const SILENCE_DURATION = 1500 // 音声終了と判定する無音期間（ミリ秒）
 
   // デバイス一覧の取得
   useEffect(() => {
@@ -58,7 +71,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
           deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
           channelCount: 2,
           sampleRate: 48000,
-          autoGainControl: true,
+          autoGainControl: true, // 自動ゲイン制御を有効にする
           echoCancellation: false,
           noiseSuppression: false,
         },
@@ -73,10 +86,20 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
       analyser.fftSize = 2048
       analyser.smoothingTimeConstant = 0 // スムージング無効化
 
-      console.log("Connecting source to analyser...")
-      source.connect(analyser)
+      // GainNodeの作成と設定
+      const gainNode = audioContext.createGain()
+      gainNode.gain.value = 1.5 // 増幅率を設定（必要に応じて調整）
+      gainNodeRef.current = gainNode
+
+      console.log("Connecting source to GainNode...")
+      source.connect(gainNode)
+      console.log("Connecting GainNode to AnalyserNode...")
+      gainNode.connect(analyser)
       analyserRef.current = analyser
-      console.log("MediaStreamAudioSourceNode connected:", source)
+      console.log(
+        "MediaStreamAudioSourceNode connected through GainNode:",
+        source
+      )
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm",
@@ -104,7 +127,16 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
 
       mediaRecorder.start(50)
       setIsRecording(true)
+      isSpeakingRef.current = false // isSpeakingRefを初期化
       console.log("MediaRecorder started with 50ms timeslice")
+
+      // VADの初期化
+      setIsSpeaking(false)
+      speechStartRef.current = null
+      if (silenceTimerRef.current !== null) {
+        clearTimeout(silenceTimerRef.current)
+        silenceTimerRef.current = null
+      }
     } catch (err) {
       console.error("録音開始エラー:", err)
     }
@@ -120,13 +152,19 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
         cancelAnimationFrame(animationFrameIdRef.current)
         animationFrameIdRef.current = null
       }
+      gainNodeRef.current = null // GainNodeの参照をクリア
+      if (silenceTimerRef.current !== null) {
+        clearTimeout(silenceTimerRef.current)
+        silenceTimerRef.current = null
+      }
+      isSpeakingRef.current = false
     }
   }
 
-  // 波形の描画
+  // 波形の描画とVADの実装
   useEffect(() => {
     if (!isRecording) {
-      // 録音が停止したら描画を停止
+      // 録音が停止したら描画とVADを停止
       return
     }
 
@@ -141,32 +179,28 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
     const bufferLength = analyser.fftSize
     const dataArray = new Uint8Array(bufferLength)
 
-    console.log("Start visualizing waveform...")
+    console.log("Start visualizing waveform and VAD...")
 
     const drawWaveform = () => {
       analyser.getByteTimeDomainData(dataArray)
 
-      // デバッグ用: 波形データのログ出力
-      // console.log("Time domain data during draw:", dataArray)
-
+      // 波形の描画
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height)
-      canvasCtx.fillStyle = "rgb(75, 85, 99)"
+      canvasCtx.fillStyle = "rgb(107, 114, 128)"
       canvasCtx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // 波形の描画
-      canvasCtx.lineWidth = 0.5
+      // 波形の描画設定
+      canvasCtx.lineWidth = 2 // 太さを調整
       canvasCtx.strokeStyle = "rgb(255, 255, 255)"
-
       canvasCtx.lineJoin = "round"
       canvasCtx.lineCap = "round"
-
       canvasCtx.beginPath()
 
       const sliceWidth = (canvas.width * 1.0) / bufferLength
       let x = 0
 
       for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0
+        const v = dataArray[i] / 128.0 // 正規化（0〜2の範囲）
         const y = (v * canvas.height) / 2
 
         if (i === 0) {
@@ -181,20 +215,86 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
       canvasCtx.lineTo(canvas.width, canvas.height / 2)
       canvasCtx.stroke()
 
+      // VADの実装
+      const rms = calculateRMS(dataArray)
+      // console.log(`Calculated RMS: ${rms}`)
+
+      if (rms > SPEAKING_THRESHOLD) {
+        if (!isSpeakingRef.current) {
+          // 音声開始
+          setIsSpeaking(true)
+          isSpeakingRef.current = true
+          speechStartRef.current = performance.now()
+          console.log("VAD: Speech started")
+        }
+
+        // もし無音タイマーがセットされていたらクリア
+        if (silenceTimerRef.current !== null) {
+          clearTimeout(silenceTimerRef.current)
+          silenceTimerRef.current = null
+          console.log("VAD: Silence timer cleared")
+        }
+      } else if (rms < SILENCE_THRESHOLD) {
+        if (isSpeakingRef.current && silenceTimerRef.current === null) {
+          // 無音タイマーを開始
+          silenceTimerRef.current = window.setTimeout(() => {
+            // 無音期間がSILENCE_DURATIONを超えた場合、音声終了と判定
+            setIsSpeaking(false)
+            isSpeakingRef.current = false
+            const speechEnd = performance.now()
+            const speechDuration = speechEnd - (speechStartRef.current || 0)
+            console.log(`VAD: Speech ended, duration: ${speechDuration}ms`)
+
+            if (speechDuration > MIN_SPEECH_DURATION) {
+              console.log(
+                "VAD: Speech duration exceeded threshold, stopping recording"
+              )
+              // 録音を停止して音声データを処理
+              stopRecording()
+              // 再度録音を開始
+              setTimeout(() => {
+                startRecording()
+                console.log("VAD: Recording restarted for next segment")
+              }, 100) // 少し遅らせることで安定させる
+            }
+
+            speechStartRef.current = null
+            silenceTimerRef.current = null
+          }, SILENCE_DURATION)
+          console.log("VAD: Silence timer started")
+        }
+      }
+      // それ以外（SILENCE_THRESHOLD <= rms <= SPEAKING_THRESHOLD）は何もしない
+
       // 次のフレームをリクエスト
       animationFrameIdRef.current = requestAnimationFrame(drawWaveform)
     }
 
-    // 描画開始
+    // 波形とVADの描画開始
     drawWaveform()
 
-    // クリーンアップ関数でアニメーションをキャンセル
+    // クリーンアップ関数でアニメーションとタイマーをキャンセル
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current)
       }
+      if (silenceTimerRef.current !== null) {
+        clearTimeout(silenceTimerRef.current)
+        silenceTimerRef.current = null
+      }
     }
   }, [isRecording])
+
+  // RMS（Root Mean Square）を計算する関数
+  const calculateRMS = (data: Uint8Array): number => {
+    let sumSquares = 0
+    for (let i = 0; i < data.length; i++) {
+      const normalized = data[i] / 128.0 - 1.0 // 正規化して-1.0〜1.0に
+      sumSquares += normalized * normalized
+    }
+    const rms = Math.sqrt(sumSquares / data.length) * 100 // パーセンテージに変換
+    return rms
+  }
 
   return (
     <div className="flex flex-wrap items-end space-y-4 gap-4">
@@ -241,13 +341,22 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
           <FaStop className="mr-2 text-lg" />
           <span className="font-medium">Stop</span>
         </button>
-      </div>
 
-      {/* 波形描画用のキャンバス */}
-      <canvas
-        ref={canvasRef}
-        className="w-40 h-12 bg-gray-600 rounded-full shadow-inner"
-      />
+        {/* VADの状態表示（アイコン版） */}
+        <div className="mt-2">
+          {isSpeaking ? (
+            <FaVolumeUp className="text-blue-500 text-2xl" title="Speaking" />
+          ) : (
+            <FaVolumeUp className="text-gray-300 text-2xl" title="Silent" />
+          )}
+        </div>
+
+        {/* 波形描画用のキャンバス */}
+        <canvas
+          ref={canvasRef}
+          className="w-40 h-12 bg-gray-500 rounded-full shadow-inner"
+        />
+      </div>
 
       {/* 録音した音声の再生 */}
       {audioUrl && (
