@@ -44,7 +44,7 @@ const App: React.FC = () => {
       {isPanelVisible && (
         <div className="mb-4">
           <ApiKeyManager setApiKey={setApiKey} />
-          <div className="flex space-x-4 mb-4 items-center">
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
             <LanguageSelector
               label="From"
               value={fromLang}

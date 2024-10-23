@@ -75,7 +75,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   }
 
   return (
-    <div className="flex items-end space-y-4 gap-4">
+    <div className="flex flex-wrap items-end space-y-4 gap-4">
       {/* デバイス選択ドロップダウン */}
       <div>
         <label className="block font-semibold mb-2">Select Audio Device:</label>
@@ -93,7 +93,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
       </div>
 
       {/* 録音コントロール */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-4">
         <button
           onClick={startRecording}
           disabled={isRecording}
@@ -123,7 +123,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
 
       {/* 録音した音声の再生 */}
       {audioUrl && (
-        <div className="ml-4">
+        <div>
           <audio controls src={audioUrl} />
         </div>
       )}
