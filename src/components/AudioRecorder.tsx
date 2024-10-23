@@ -1,7 +1,5 @@
-// src/components/AudioRecorder.tsx
-
 import React, { useState, useRef, useEffect } from "react"
-import { FaMicrophone, FaStop, FaVolumeUp, FaVolumeMute } from "react-icons/fa"
+import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
 
 type AudioRecorderProps = {
   selectedDeviceId: string
@@ -18,9 +16,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const audioChunksRef = useRef<Blob[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
-  const gainNodeRef = useRef<GainNode | null>(null) // GainNodeの参照を追加
+  const gainNodeRef = useRef<GainNode | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animationFrameIdRef = useRef<number | null>(null)
+  const streamRef = useRef<MediaStream | null>(null) // MediaStream の参照を追加
 
   // VAD関連の状態
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -29,8 +28,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const silenceTimerRef = useRef<number | null>(null) // 無音検出用のタイマー
 
   // 閾値設定（必要に応じて調整）
-  const SPEAKING_THRESHOLD = 20 // 音声開始を判定する高めの閾値
-  const SILENCE_THRESHOLD = 10 // 音声終了を判定する低めの閾値
+  const SPEAKING_THRESHOLD = 25 // 音声開始を判定する高めの閾値
+  const SILENCE_THRESHOLD = 15 // 音声終了を判定する低めの閾値
   const MIN_SPEECH_DURATION = 500 // ミリ秒単位で音声と判定する最小期間
   const SILENCE_DURATION = 1500 // 音声終了と判定する無音期間（ミリ秒）
 
@@ -67,6 +66,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         },
       })
       console.log("Audio stream obtained:", stream)
+      streamRef.current = stream // MediaStream を保存
 
       const audioContext = new AudioContext()
       audioContextRef.current = audioContext
@@ -78,7 +78,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       // GainNodeの作成と設定
       const gainNode = audioContext.createGain()
-      gainNode.gain.value = 1.5 // 増幅率を設定（必要に応じて調整）
+      gainNode.gain.value = 2.0 // 増幅率を設定（必要に応じて調整）
       gainNodeRef.current = gainNode
 
       console.log("Connecting source to GainNode...")
@@ -100,8 +100,6 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
-          // デバッグ用: 音声データのログ出力
-          // console.log("Audio chunk received:", event.data)
         }
       }
 
@@ -118,15 +116,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
       mediaRecorder.start(50)
       setIsRecording(true)
       isSpeakingRef.current = false // isSpeakingRefを初期化
-      console.log("MediaRecorder started with 50ms timeslice")
-
-      // VADの初期化
-      setIsSpeaking(false)
+      setIsSpeaking(false) // isSpeakingを初期化
       speechStartRef.current = null
       if (silenceTimerRef.current !== null) {
         clearTimeout(silenceTimerRef.current)
         silenceTimerRef.current = null
       }
+      console.log("MediaRecorder started with 50ms timeslice")
     } catch (err) {
       console.error("録音開始エラー:", err)
     }
@@ -136,18 +132,36 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
-      audioContextRef.current?.close()
       console.log("Recording stopped manually")
+
+      // MediaStream の停止
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
+
+      // AudioContext のクローズと参照のクリア
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+      analyserRef.current = null
+      gainNodeRef.current = null
+
+      // アニメーションフレームのキャンセル
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current)
         animationFrameIdRef.current = null
       }
-      gainNodeRef.current = null // GainNodeの参照をクリア
+
+      // タイマーのクリア
       if (silenceTimerRef.current !== null) {
         clearTimeout(silenceTimerRef.current)
         silenceTimerRef.current = null
       }
+
       isSpeakingRef.current = false
+      setIsSpeaking(false) // isSpeakingを初期化
     }
   }
 
@@ -267,19 +281,14 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current)
+        animationFrameIdRef.current = null
       }
       if (silenceTimerRef.current !== null) {
         clearTimeout(silenceTimerRef.current)
         silenceTimerRef.current = null
       }
     }
-  }, [
-    isRecording,
-    SPEAKING_THRESHOLD,
-    SILENCE_THRESHOLD,
-    SILENCE_DURATION,
-    MIN_SPEECH_DURATION,
-  ])
+  }, [isRecording]) // 依存関係を isRecording のみに
 
   // RMS（Root Mean Square）を計算する関数
   const calculateRMS = (data: Uint8Array): number => {
