@@ -1,75 +1,120 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import AudioRecorder from "./components/AudioRecorder"
 import TranslationPane from "./components/TranslationPane"
 import LanguageSelector from "./components/LanguageSelector"
-import useWebSocket from "./hooks/useWebSocket"
 
-const App = () => {
+const App: React.FC = () => {
+  const [apiKey, setApiKey] = useState("")
   const [fromText, setFromText] = useState("")
   const [toText, setToText] = useState("")
   const [fromLang, setFromLang] = useState("ja")
   const [toLang, setToLang] = useState("vi")
 
-  const { messages, sendMessage } = useWebSocket("ws://localhost:3030")
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const latestMessage = messages[messages.length - 1]
-      setToText(latestMessage)
-    }
-  }, [messages])
-
+  // Whisper APIに音声データを送信する関数
   const handleAudioData = async (data: Blob) => {
-    try {
-      const formData = new FormData()
-      formData.append("audio", data)
+    if (!apiKey) {
+      alert("APIキーを入力してください")
+      return
+    }
 
-      const response = await fetch("http://localhost:3030/whisper", {
-        method: "POST",
-        body: formData,
-      })
+    const formData = new FormData()
+    formData.append("file", data, "audio.wav")
+    formData.append("model", "whisper-1")
+
+    try {
+      const response = await fetch(
+        "https://api.openai.com/v1/audio/transcriptions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: formData,
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error("エラー:", error)
+        alert(`エラー: ${error.error.message}`)
+        return
+      }
 
       const result = await response.json()
-      setFromText(result.fromText)
-
-      handleTranslate(result.fromText)
-    } catch (error) {
-      console.error("Whisper APIエラー:", error)
+      setFromText(result.text)
+      handleTranslation(result.text) // ChatGPTへの翻訳リクエスト
+    } catch (error: unknown) {
+      console.error("エラー:", error)
+      error instanceof Error && alert("音声処理エラー: " + error.message)
     }
   }
 
-  const handleTranslate = async (text: string) => {
+  // ChatGPT APIに翻訳リクエストを送信する関数
+  const handleTranslation = async (text: string) => {
+    if (!apiKey) {
+      alert("APIキーを入力してください")
+      return
+    }
+
+    const requestBody = {
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: `Translate from ${fromLang} to ${toLang}.` },
+        { role: "user", content: text },
+      ],
+    }
+
     try {
-      const requestPayload = JSON.stringify({
-        text,
-        fromLang: fromLang,
-        toLang: toLang,
-      })
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      )
 
-      sendMessage(requestPayload)
-
-      const response = await fetch("http://localhost:3030/translate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: requestPayload,
-      })
+      if (!response.ok) {
+        const error = await response.json()
+        console.error("エラー:", error)
+        alert(`エラー: ${error.error.message}`)
+        return
+      }
 
       const result = await response.json()
-      setToText(result.translatedText)
-    } catch (error) {
-      console.error("Translate APIエラー:", error)
+      setToText(result.choices[0].message.content) // 翻訳結果を表示
+    } catch (error: unknown) {
+      console.error("エラー:", error)
+      error instanceof Error && alert("翻訳エラー: " + error.message)
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
-      <h1 className="text-2xl font-bold mb-4">PAX Translation System</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Whisper & ChatGPT Translation System
+      </h1>
 
-      <div className="flex space-x-4 mb-4 items-start">
-        {/* prettier-ignore */}
-        <LanguageSelector label="From" value={fromLang} onChange={setFromLang} />
+      {/* APIキーの入力フォーム */}
+      <div className="mb-4">
+        <label className="block font-semibold mb-2">APIキーを入力:</label>
+        <input
+          type="text"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          className="w-full p-2 border rounded-md"
+        />
+      </div>
+
+      <div className="flex space-x-4 mb-4 items-center">
+        <LanguageSelector
+          label="From"
+          value={fromLang}
+          onChange={setFromLang}
+        />
         <LanguageSelector label="To" value={toLang} onChange={setToLang} />
         <AudioRecorder onAudioData={handleAudioData} />
       </div>
