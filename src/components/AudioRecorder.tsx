@@ -1,15 +1,19 @@
-import React, { useState, useRef, useEffect } from "react"
-import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
+// src/components/AudioRecorder.tsx
 
-type Props = {
+import React, { useState, useRef, useEffect } from "react"
+import { FaMicrophone, FaStop, FaVolumeUp, FaVolumeMute } from "react-icons/fa"
+
+type AudioRecorderProps = {
+  selectedDeviceId: string
   onAudioData: (data: Blob) => void
 }
 
-const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  selectedDeviceId,
+  onAudioData,
+}) => {
   const [isRecording, setIsRecording] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -29,20 +33,6 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   const SILENCE_THRESHOLD = 10 // 音声終了を判定する低めの閾値
   const MIN_SPEECH_DURATION = 500 // ミリ秒単位で音声と判定する最小期間
   const SILENCE_DURATION = 1500 // 音声終了と判定する無音期間（ミリ秒）
-
-  // デバイス一覧の取得
-  useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const audioDevices = devices.filter(
-        (device) => device.kind === "audioinput"
-      )
-      setDevices(audioDevices)
-
-      if (audioDevices.length > 0) {
-        setSelectedDeviceId(audioDevices[0].deviceId)
-      }
-    })
-  }, [])
 
   // Canvasのサイズを設定
   const setCanvasSize = () => {
@@ -217,7 +207,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
 
       // VADの実装
       const rms = calculateRMS(dataArray)
-      // console.log(`Calculated RMS: ${rms}`)
+      console.log(`Calculated RMS: ${rms}`)
 
       if (rms > SPEAKING_THRESHOLD) {
         if (!isSpeakingRef.current) {
@@ -283,7 +273,13 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
         silenceTimerRef.current = null
       }
     }
-  }, [isRecording])
+  }, [
+    isRecording,
+    SPEAKING_THRESHOLD,
+    SILENCE_THRESHOLD,
+    SILENCE_DURATION,
+    MIN_SPEECH_DURATION,
+  ])
 
   // RMS（Root Mean Square）を計算する関数
   const calculateRMS = (data: Uint8Array): number => {
@@ -297,23 +293,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   }
 
   return (
-    <div className="flex flex-wrap items-end space-y-4 gap-4">
-      {/* デバイス選択ドロップダウン */}
-      <div>
-        <label className="block font-semibold mb-2">Select Audio Device:</label>
-        <select
-          value={selectedDeviceId}
-          onChange={(e) => setSelectedDeviceId(e.target.value)}
-          className="p-2 border rounded-md"
-        >
-          {devices.map((device) => (
-            <option key={device.deviceId} value={device.deviceId}>
-              {device.label || `Audio Device ${device.deviceId}`}
-            </option>
-          ))}
-        </select>
-      </div>
-
+    <div className="flex flex-row items-center gap-4">
       {/* 録音コントロール */}
       <div className="flex items-center gap-4">
         <button
@@ -343,7 +323,7 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
         </button>
 
         {/* VADの状態表示（アイコン版） */}
-        <div className="mt-2">
+        <div>
           {isSpeaking ? (
             <FaVolumeUp className="text-blue-500 text-2xl" title="Speaking" />
           ) : (

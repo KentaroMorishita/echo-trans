@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { FaSave, FaTrash } from "react-icons/fa"
 
 interface ApiKeyManagerProps {
+  apiKey: string
   setApiKey: (key: string) => void
 }
 
