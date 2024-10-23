@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { FaSave, FaTrash } from "react-icons/fa"
 
 interface ApiKeyManagerProps {
   setApiKey: (key: string) => void
@@ -47,18 +48,20 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
       />
       <button
         onClick={saveApiKey}
-        className="px-4 py-2 font-semibold text-white rounded-lg shadow-md bg-blue-500 hover:bg-blue-600"
+        className="flex items-center justify-center px-4 py-2 mt-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 shadow-lg"
       >
-        Save API Key
+        <FaSave className="mr-2 text-lg" />
+        <span className="font-medium">Save API Key</span>
       </button>
     </div>
   ) : (
     <div className="mb-4 flex items-center space-x-4">
       <button
         onClick={clearApiKey}
-        className="px-4 py-2 font-semibold text-white rounded-lg shadow-md bg-red-500 hover:bg-red-600"
+        className="flex items-center justify-center px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white transition-all duration-300 shadow-lg"
       >
-        Clear API Key
+        <FaTrash className="mr-2 text-lg" />
+        <span className="font-medium">Clear API Key</span>
       </button>
     </div>
   )

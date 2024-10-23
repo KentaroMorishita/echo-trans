@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
+import { FaMicrophone, FaStop } from "react-icons/fa"
 
 type Props = {
   onAudioData: (data: Blob) => void
@@ -13,14 +14,12 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
   const audioChunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
-    // 利用可能なデバイスを取得
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const audioDevices = devices.filter(
         (device) => device.kind === "audioinput"
       )
       setDevices(audioDevices)
 
-      // 最初のデバイスをデフォルト選択
       if (audioDevices.length > 0) {
         setSelectedDeviceId(audioDevices[0].deviceId)
       }
@@ -98,24 +97,27 @@ const AudioRecorder: React.FC<Props> = ({ onAudioData }) => {
         <button
           onClick={startRecording}
           disabled={isRecording}
-          className={`px-4 py-2 font-semibold text-white rounded-lg shadow-md ${
+          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
             isRecording
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
+              : "bg-blue-600 hover:bg-blue-700"
+          } shadow-lg text-white`}
         >
-          Start Recording
+          <FaMicrophone className="mr-2 text-lg" />
+          <span className="font-medium">Start</span>
         </button>
+
         <button
           onClick={stopRecording}
           disabled={!isRecording}
-          className={`px-4 py-2 font-semibold text-white rounded-lg shadow-md ${
+          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
             !isRecording
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-red-500 hover:bg-red-600"
-          }`}
+              : "bg-red-600 hover:bg-red-700"
+          } shadow-lg text-white`}
         >
-          Stop Recording
+          <FaStop className="mr-2 text-lg" />
+          <span className="font-medium">Stop</span>
         </button>
       </div>
 
