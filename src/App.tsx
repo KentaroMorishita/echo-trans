@@ -12,8 +12,8 @@ const App: React.FC = () => {
   const [apiKey, setApiKey] = useState("")
   const [fromLang, setFromLang] = useState("ja")
   const [toLang, setToLang] = useState("vi")
-  const [translations, setTranslations] = useState<TranslationHistory[]>([]) // 出力履歴の配列
-  const [isPanelVisible, setIsPanelVisible] = useState(true) // トグル状態
+  const [translations, setTranslations] = useState<TranslationHistory[]>([])
+  const [isPanelVisible, setIsPanelVisible] = useState(true)
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
@@ -21,7 +21,6 @@ const App: React.FC = () => {
         Whisper & ChatGPT Translation System
       </h1>
 
-      {/* トグルボタン */}
       <button
         onClick={() => setIsPanelVisible(!isPanelVisible)}
         className={`mb-4 px-4 py-2 flex items-center justify-center rounded-full transition-all duration-300 ${
@@ -40,7 +39,6 @@ const App: React.FC = () => {
         </span>
       </button>
 
-      {/* 操作パネル */}
       {isPanelVisible && (
         <div className="mb-4">
           <ApiKeyManager setApiKey={setApiKey} />
@@ -58,7 +56,7 @@ const App: React.FC = () => {
                   .then((data) => checkApiKey(apiKey, data))
                   .then((data) => handleAudioData(data, apiKey, (text) => text))
                   .then((text) => handleTranslation(text, apiKey, fromLang, toLang))
-                  .then((history) =>  setTranslations((prev) => [...prev, history]))
+                  .then((history) => setTranslations((prev) => [...prev, history]))
                   .catch((error) => console.error(error))
               }
             />
@@ -66,7 +64,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* 翻訳履歴の表示 */}
       <div className="mt-4 p-4 bg-white rounded-lg shadow-lg">
         <h2 className="text-xl font-bold mb-2">Translation History</h2>
         {translations.length > 0 ? (

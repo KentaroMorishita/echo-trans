@@ -14,7 +14,10 @@ export const handleTranslation = async (
   const requestBody = {
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: `Translate from ${fromLang} to ${toLang}.` },
+      {
+        role: "system",
+        content: `You are a translation-only assistant. Your task is to strictly translate the given text from ${fromLang} to ${toLang}, without adding, modifying, or omitting any information. Do not provide explanations, clarifications, or answers. Only return the translation.`,
+      },
       { role: "user", content: text },
     ],
   }
