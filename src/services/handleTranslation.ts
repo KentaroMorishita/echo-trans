@@ -1,15 +1,14 @@
-import { setToTextType } from "./types"
+import { TranslationHistory } from "./types"
 
 export const handleTranslation = async (
   text: string | undefined,
   apiKey: string,
   fromLang: string,
-  toLang: string,
-  setToText: setToTextType
-) => {
+  toLang: string
+): Promise<TranslationHistory> => {
   if (!text) {
     alert("Please enter the text to translate")
-    return
+    throw new Error("No text to translate")
   }
 
   const requestBody = {
@@ -34,11 +33,11 @@ export const handleTranslation = async (
       const error = await response.json()
       console.error("Error:", error)
       alert(`Error: ${error.error.message}`)
-      return
+      throw new Error(error.error.message)
     }
 
     const result = await response.json()
-    setToText(result.choices[0].message.content)
+    return { original: text, translated: result.choices[0].message.content }
   } catch (error: unknown) {
     error instanceof Error && alert("Translation error: " + error.message)
     throw error
