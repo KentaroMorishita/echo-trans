@@ -302,52 +302,50 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   }
 
   return (
-    <div className="flex flex-row items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4">
       {/* 録音コントロール */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={startRecording}
-          disabled={isRecording}
-          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
-            isRecording
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } shadow-lg text-white`}
-        >
-          <FaMicrophone className="mr-2 text-lg" />
-          <span className="font-medium">Start</span>
-        </button>
+      <button
+        onClick={startRecording}
+        disabled={isRecording}
+        className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
+          isRecording
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        } shadow-lg text-white`}
+      >
+        <FaMicrophone className="mr-2 text-lg" />
+        <span className="font-medium">Start</span>
+      </button>
 
-        <button
-          onClick={stopRecording}
-          disabled={!isRecording}
-          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
-            !isRecording
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-red-600 hover:bg-red-700"
-          } shadow-lg text-white`}
-        >
-          <FaStop className="mr-2 text-lg" />
-          <span className="font-medium">Stop</span>
-        </button>
+      <button
+        onClick={stopRecording}
+        disabled={!isRecording}
+        className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
+          !isRecording
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-red-600 hover:bg-red-700"
+        } shadow-lg text-white`}
+      >
+        <FaStop className="mr-2 text-lg" />
+        <span className="font-medium">Stop</span>
+      </button>
 
-        {/* VADの状態表示（アイコン版） */}
-        <div>
-          {isSpeaking ? (
-            <FaVolumeUp className="text-blue-500 text-2xl" title="Speaking" />
-          ) : (
-            <FaVolumeUp className="text-gray-300 text-2xl" title="Silent" />
-          )}
-        </div>
-
-        {/* 波形描画用のキャンバス */}
-        <canvas
-          ref={canvasRef}
-          className="w-40 h-12 bg-gray-500 rounded-full shadow-inner"
-        />
+      {/* VADの状態表示 */}
+      <div>
+        {isSpeaking ? (
+          <FaVolumeUp className="text-blue-500 text-2xl" title="Speaking" />
+        ) : (
+          <FaVolumeUp className="text-gray-300 text-2xl" title="Silent" />
+        )}
       </div>
 
-      {/* 録音した音声の再生 */}
+      {/* 波形描画用のキャンバス */}
+      <canvas
+        ref={canvasRef}
+        className="w-80 h-12 bg-gray-500 rounded-full shadow-inner"
+      />
+
+      {/* 最後に録音した音声の再生 */}
       {audioUrl && (
         <div>
           <audio controls src={audioUrl} />
