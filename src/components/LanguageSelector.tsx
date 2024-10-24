@@ -1,12 +1,16 @@
 import React from "react"
 
-type Props = {
+export type LanguageSelectorProps = {
   label: string
   value: string
   onChange: (value: string) => void
 }
 
-const LanguageSelector: React.FC<Props> = ({ label, value, onChange }) => {
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  label,
+  value,
+  onChange,
+}) => {
   return (
     <>
       <div>
@@ -24,5 +28,3 @@ const LanguageSelector: React.FC<Props> = ({ label, value, onChange }) => {
     </>
   )
 }
-
-export default LanguageSelector

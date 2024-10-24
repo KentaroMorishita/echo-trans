@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react"
 import { FaSave, FaTrash } from "react-icons/fa"
 
-interface ApiKeyManagerProps {
+export type ApiKeyManagerProps = {
   apiKey: string
   setApiKey: (key: string) => void
 }
 
-const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
+export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
   const [apiKey, setLocalApiKey] = useState("")
   const [apiKeyVisible, setApiKeyVisible] = useState(false)
 
@@ -67,5 +67,3 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
     </div>
   )
 }
-
-export default ApiKeyManager

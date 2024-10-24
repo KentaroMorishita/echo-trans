@@ -1,4 +1,4 @@
-import { TranslationHistory } from "./types"
+import { TranslationHistory } from "../types"
 
 export const handleTranslation = async (
   text: string | undefined,
@@ -40,7 +40,7 @@ export const handleTranslation = async (
     }
 
     const result = await response.json()
-    return { original: text, translated: result.choices[0].message.content }
+    return { original: text, translated: result.choices[0].message.content, timestamp: new Date() }
   } catch (error: unknown) {
     error instanceof Error && alert("Translation error: " + error.message)
     throw error

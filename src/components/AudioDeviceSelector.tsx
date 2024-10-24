@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react"
 
-type AudioDeviceSelectorProps = {
+export type AudioDeviceSelectorProps = {
   selectedDeviceId: string
   setSelectedDeviceId: (deviceId: string) => void
 }
 
-const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
+export const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
   selectedDeviceId,
   setSelectedDeviceId,
 }) => {
@@ -55,5 +55,3 @@ const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
     </div>
   )
 }
-
-export default AudioDeviceSelector

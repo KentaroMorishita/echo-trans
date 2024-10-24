@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react"
 import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
 
-type AudioRecorderProps = {
+export type AudioRecorderProps = {
   selectedDeviceId: string
   onAudioData: (data: Blob) => void
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({
+export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   selectedDeviceId,
   onAudioData,
 }) => {
@@ -356,5 +356,3 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
     </div>
   )
 }
-
-export default AudioRecorder

@@ -1,10 +1,10 @@
 import React from "react"
 import { FaTimes } from "react-icons/fa"
-import ApiKeyManager from "./ApiKeyManager"
-import LanguageSelector from "./LanguageSelector"
-import AudioDeviceSelector from "./AudioDeviceSelector"
+import { ApiKeyManager } from "./ApiKeyManager"
+import { LanguageSelector } from "./LanguageSelector"
+import { AudioDeviceSelector } from "./AudioDeviceSelector"
 
-type SettingsModalProps = {
+export type SettingsModalProps = {
   isOpen: boolean
   onClose: () => void
   apiKey: string
@@ -17,7 +17,7 @@ type SettingsModalProps = {
   setSelectedDeviceId: (deviceId: string) => void
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({
+export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   apiKey,
@@ -59,5 +59,3 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   )
 }
-
-export default SettingsModal

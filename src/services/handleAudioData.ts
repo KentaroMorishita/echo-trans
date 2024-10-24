@@ -1,4 +1,4 @@
-import { setFromTextType } from "./types"
+import { setFromTextType } from "../types"
 
 export const handleAudioData = async (
   data: Blob,
