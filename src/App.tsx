@@ -31,6 +31,10 @@ const App: React.FC = () => {
     when([!!storedApiKey, () => setApiKey(storedApiKey!)])
   }, [])
 
+  const checkApiKeyPipeline = checkApiKey(apiKey)
+  const handleAudioDataByAudioData = handleAudioData(apiKey)
+  const handleTranslationByText = handleTranslation(apiKey, fromLang, toLang)
+
   return (
     <div className="min-h-screen bg-gray-200 p-4">
       <div className="flex justify-between items-center mb-2">
@@ -66,9 +70,9 @@ const App: React.FC = () => {
           selectedDeviceId={selectedDeviceId}
           onAudioData={(data: Blob) =>
             Promise.resolve(data)
-              .then((data) => checkApiKey(apiKey, data))
-              .then((data) => handleAudioData(data, apiKey, (text) => text))
-              .then((text) => handleTranslation(text, apiKey, fromLang, toLang))
+              .then((data) => checkApiKeyPipeline(data))
+              .then((data) => handleAudioDataByAudioData(data))
+              .then((text) => handleTranslationByText(text))
               .then((history) => setTranslations((prev) => [...prev, history]))
               .catch((error) => console.error(error))
           }
@@ -112,7 +116,12 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
-        <TranslationList translations={translations} sortOrder={sortOrder} />
+        <TranslationList
+          translations={translations}
+          sortOrder={sortOrder}
+          setTranslations={setTranslations}
+          handleTranslation={handleTranslationByText}
+        />
       </div>
     </div>
   )

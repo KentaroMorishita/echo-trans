@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { Map } from "./Map"
 
 export type AudioDeviceSelectorProps = {
   selectedDeviceId: string
@@ -46,11 +47,13 @@ export const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
         onChange={(e) => setSelectedDeviceId(e.target.value)}
         className="p-2 border rounded-md w-full"
       >
-        {devices.map((device) => (
-          <option key={device.deviceId} value={device.deviceId}>
-            {device.label || `Audio Device ${device.deviceId}`}
-          </option>
-        ))}
+        <Map items={devices}>
+          {(device) => (
+            <option key={device.deviceId} value={device.deviceId}>
+              {device.label || `Audio Device ${device.deviceId}`}
+            </option>
+          )}
+        </Map>
       </select>
     </div>
   )

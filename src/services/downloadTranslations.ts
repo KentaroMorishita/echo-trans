@@ -14,7 +14,10 @@ export const downloadTranslations = (
     sortedTranslations.reverse()
   }
 
-  const dataStr = JSON.stringify(sortedTranslations, null, 2) // JSONを整形
+  const excludes = ["isEditing"]
+  const replacer = (key: string, value: any) =>
+    excludes.includes(key) ? undefined : value
+  const dataStr = JSON.stringify(sortedTranslations, replacer, 2)
   const blob = new Blob([dataStr], { type: "application/json" })
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
