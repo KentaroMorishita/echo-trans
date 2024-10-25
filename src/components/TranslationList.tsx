@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { FaClock, FaMicrophone, FaLanguage, FaTrash } from "react-icons/fa"
+import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
 import { when } from "../services/match"
 import { Map } from "./Map"
@@ -11,6 +11,7 @@ export type TranslationListProps = {
   sortOrder: SortOrder
   setTranslations: React.Dispatch<React.SetStateAction<TranslationHistory[]>>
   handleTranslation: (text: string | undefined) => Promise<TranslationHistory>
+  handleTextToSpeech: (text: string) => Promise<string | undefined>
 }
 
 export const TranslationList: React.FC<TranslationListProps> = ({
@@ -18,11 +19,12 @@ export const TranslationList: React.FC<TranslationListProps> = ({
   sortOrder,
   setTranslations,
   handleTranslation,
+  handleTextToSpeech,
 }) => {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState<string>("")
 
-  const sortedTranslations = [...translations].map((item, index) => ({
+  const sortedTranslations = translations.map((item, index) => ({
     item,
     index,
   }))
@@ -52,11 +54,25 @@ export const TranslationList: React.FC<TranslationListProps> = ({
 
     const timestamp = translations[editIndex].timestamp
     handleTranslation(editValue)
-      .then((history) => ({ ...history, timestamp }))
+      .then((history) => ({ ...history, timestamp, translatedAudioUrl: null }))
       .then((history) => {
         update(editIndex)(history)
         handleEditFinish()
       })
+  }
+
+  const handleSpeech = (index: number, text: string) => {
+    const history = translations[index]
+    if (history.translatedAudioUrl) {
+      console.log("Playing cached audio...", history.translatedAudioUrl)
+      return new Audio(history.translatedAudioUrl).play()
+    }
+
+    handleTextToSpeech(text).then((translatedAudioUrl) => {
+      if (translatedAudioUrl) {
+        update(index)({ ...history, translatedAudioUrl })
+      }
+    })
   }
 
   return (
@@ -96,7 +112,12 @@ export const TranslationList: React.FC<TranslationListProps> = ({
                 </Match>
               </div>
               <div className="flex items-center text-2xl text-blue-600">
-                <FaLanguage className="mr-2" />
+                <button
+                  onClick={() => handleSpeech(index, item.translated)}
+                  className="text-xl"
+                >
+                  <FaVolumeUp className="mr-2" />
+                </button>
                 <span>{item.translated}</span>
               </div>
               <div className="flex justify-between">

@@ -46,11 +46,7 @@ export const arrayStateHandlers =
       match<T[]>(
         (["update", "insert", "remove"] as Operation[]).map((op) => [
           op === operation,
-          () => {
-            const res = handleMethods<T>()[op](prev, index, value!)
-            console.log(res)
-            return res
-          },
+          () => handleMethods<T>()[op](prev, index, value!),
         ])
       )(() => prev)
     )

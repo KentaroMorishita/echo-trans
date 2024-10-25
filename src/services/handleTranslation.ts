@@ -44,6 +44,7 @@ export const handleTranslation =
         original: text,
         translated: result.choices[0].message.content,
         timestamp: new Date(),
+        translatedAudioUrl: null,
         isEditing: false,
       }
     } catch (error: unknown) {

@@ -14,6 +14,7 @@ import { downloadTranslations } from "./services/downloadTranslations"
 import { checkApiKey } from "./services/checkApiKey"
 import { handleAudioData } from "./services/handleAudioData"
 import { handleTranslation } from "./services/handleTranslation"
+import { handleTextToSpeech } from "./services/handleTextToSpeech"
 import { TranslationHistory, SortOrder } from "./types"
 import { match, when } from "./services/match"
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const checkApiKeyPipeline = checkApiKey(apiKey)
   const handleAudioDataByAudioData = handleAudioData(apiKey)
   const handleTranslationByText = handleTranslation(apiKey, fromLang, toLang)
+  const handleTextToSpeechByText = handleTextToSpeech(apiKey)
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
@@ -121,6 +123,7 @@ const App: React.FC = () => {
           sortOrder={sortOrder}
           setTranslations={setTranslations}
           handleTranslation={handleTranslationByText}
+          handleTextToSpeech={handleTextToSpeechByText}
         />
       </div>
     </div>
