@@ -18,7 +18,11 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <label className="block font-semibold mb-2">{label}:</label>
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value as Language)}
+          onChange={(e) => {
+            const language = e.target.value as Language
+            localStorage.setItem(`${label.toLowerCase()}Lang`, language)
+            onChange(language)
+          }}
           className="p-2 border rounded-md"
         >
           <option value="ja">日本語</option>

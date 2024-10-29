@@ -4,33 +4,24 @@ import { ApiKeyManager } from "./ApiKeyManager"
 import { LanguageSelector } from "./LanguageSelector"
 import { AudioDeviceSelector } from "./AudioDeviceSelector"
 import { When } from "./Match"
-import { Language } from "../types"
+import { Config } from "../types"
+import { objectStateUpdater } from "../services/objectStateUpdater"
 
 export type SettingsModalProps = {
   isOpen: boolean
   onClose: () => void
-  apiKey: string
-  setApiKey: (key: string) => void
-  fromLang: Language
-  toLang: Language
-  setFromLang: (lang: Language) => void
-  setToLang: (lang: Language) => void
-  selectedDeviceId: string
-  setSelectedDeviceId: (deviceId: string) => void
+  config: Config
+  setConfig: (value: React.SetStateAction<Config>) => void
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
-  apiKey,
-  setApiKey,
-  fromLang,
-  toLang,
-  setFromLang,
-  setToLang,
-  selectedDeviceId,
-  setSelectedDeviceId,
+  config: { apiKey, fromLang, toLang, selectedDeviceId },
+  setConfig,
 }) => {
+  const configSetter = objectStateUpdater(setConfig)
+
   return (
     <When exp={isOpen}>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -44,16 +35,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
           <h2 className="text-xl font-semibold mb-4">Settings</h2>
           <div className="space-y-4">
-            <ApiKeyManager apiKey={apiKey} setApiKey={setApiKey} />
+            <ApiKeyManager apiKey={apiKey} setApiKey={configSetter("apiKey")} />
             <LanguageSelector
               label="From"
               value={fromLang}
-              onChange={setFromLang}
+              onChange={configSetter("fromLang")}
             />
-            <LanguageSelector label="To" value={toLang} onChange={setToLang} />
+            <LanguageSelector
+              label="To"
+              value={toLang}
+              onChange={configSetter("toLang")}
+            />
             <AudioDeviceSelector
               selectedDeviceId={selectedDeviceId}
-              setSelectedDeviceId={setSelectedDeviceId}
+              setSelectedDeviceId={configSetter("selectedDeviceId")}
             />
           </div>
         </div>

@@ -18,26 +18,29 @@ import { checkApiKey } from "./services/checkApiKey"
 import { handleAudioData } from "./services/handleAudioData"
 import { handleTranslation } from "./services/handleTranslation"
 import { arrayStateHandlers } from "./services/arrayStateHandlers"
-import { Language, TranslationHistory, SortOrder } from "./types"
-import { match, when } from "./services/match"
+import { objectStateUpdater } from "./services/objectStateUpdater"
+import { Config, TranslationHistory, SortOrder } from "./types"
+import { match } from "./services/match"
 
 const App: React.FC = () => {
-  const [apiKey, setApiKey] = useState("")
-  const [fromLang, setFromLang] = useState<Language>("ja")
-  const [toLang, setToLang] = useState<Language>("en")
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
-
   const [translations, setTranslations] = useState<TranslationHistory[]>([])
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
 
-  const config = { apiKey, fromLang, toLang, selectedDeviceId }
+  const [config, setConfig] = useState<Config>({
+    apiKey: "",
+    fromLang: "ja",
+    toLang: "en",
+    selectedDeviceId: "",
+  })
 
-  const insert = arrayStateHandlers(setTranslations)("insert")(0)
+  const configSetter = objectStateUpdater(setConfig)
+  const insertHistory = arrayStateHandlers(setTranslations)("insert")(Infinity)
 
+  // prettier-ignore
   useEffect(() => {
-    const storedApiKey = localStorage.getItem("apiKey")
-    when([!!storedApiKey, () => setApiKey(storedApiKey!)])
+    const storedConfig = (key: keyof Config) => localStorage.getItem(key) || config[key]
+    Object.keys(config).forEach(key => configSetter(key as keyof Config)(storedConfig(key as keyof Config)))
   }, [])
 
   return (
@@ -59,20 +62,14 @@ const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        apiKey={apiKey}
-        setApiKey={setApiKey}
-        fromLang={fromLang}
-        toLang={toLang}
-        setFromLang={setFromLang}
-        setToLang={setToLang}
-        selectedDeviceId={selectedDeviceId}
-        setSelectedDeviceId={setSelectedDeviceId}
+        config={config}
+        setConfig={setConfig}
       />
 
       {/* Audio Recorder */}
       <div className="mb-4">
         <AudioRecorder
-          selectedDeviceId={selectedDeviceId}
+          config={config}
           onAudioData={(data: Blob) =>
             pipe(
               right(data),
@@ -81,7 +78,7 @@ const App: React.FC = () => {
               flatMap(handleTranslation),
               RTEMatch(
                 (error) => console.error(error),
-                (history) => insert(history)
+                (history) => insertHistory(history)
               )
             )(config)()
           }
@@ -115,10 +112,10 @@ const App: React.FC = () => {
               className="text-gray-700 hover:text-gray-900 focus:outline-none"
             >
               <Match>
-                <When exp={sortOrder === "newest"}>
+                <When exp={sortOrder === "oldest"}>
                   <FaSortUp className="text-xl" />
                 </When>
-                <When exp={sortOrder === "oldest"}>
+                <When exp={sortOrder === "newest"}>
                   <FaSortDown className="text-xl" />
                 </When>
               </Match>

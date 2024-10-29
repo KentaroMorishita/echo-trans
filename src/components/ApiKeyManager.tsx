@@ -19,7 +19,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
     } else {
       setApiKeyVisible(true)
     }
-  }, [setApiKey])
+  }, [])
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalApiKey(e.target.value)

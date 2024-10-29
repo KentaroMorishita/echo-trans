@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from "react"
 import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
+import { Config } from "../types"
 
 export type AudioRecorderProps = {
-  selectedDeviceId: string
+  config: Config
   onAudioData: (data: Blob) => void
 }
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
-  selectedDeviceId,
+  config,
   onAudioData,
 }) => {
   const [isRecording, setIsRecording] = useState(false)
@@ -57,7 +58,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+          deviceId: config.selectedDeviceId ? { exact: config.selectedDeviceId } : undefined,
           channelCount: 2,
           sampleRate: 48000,
           autoGainControl: true, // 自動ゲイン制御を有効にする
@@ -221,7 +222,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       // VADの実装
       const rms = calculateRMS(dataArray)
-      console.log(`Calculated RMS: ${rms}`)
+      // console.log(`Calculated RMS: ${rms}`)
 
       if (rms > SPEAKING_THRESHOLD) {
         if (!isSpeakingRef.current) {

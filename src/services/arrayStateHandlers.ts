@@ -1,4 +1,4 @@
-import React from "react"
+import { Dispatch, SetStateAction, useCallback } from "react"
 import { match } from "./match"
 
 export type Operation = "update" | "insert" | "remove"
@@ -37,16 +37,18 @@ export const handleMethods = <T>(): HandleMethods<T> => ({
   remove: handleRemove(),
 })
 
-export const arrayStateHandlers =
-  <T>(setState: React.Dispatch<React.SetStateAction<T[]>>) =>
-  (operation: Operation) =>
-  (index: number) =>
-  (value?: T) =>
-    setState((prev) =>
-      match<T[]>(
-        (["update", "insert", "remove"] as Operation[]).map((op) => [
-          op === operation,
-          () => handleMethods<T>()[op](prev, index, value!),
-        ])
-      )(() => prev)
-    )
+export const arrayStateHandlers = <T>(
+  setState: Dispatch<SetStateAction<T[]>>
+) =>
+  useCallback(
+    (operation: Operation) => (index: number) => (value?: T) =>
+      setState((prev) =>
+        match<T[]>(
+          (["update", "insert", "remove"] as Operation[]).map((op) => [
+            op === operation,
+            () => handleMethods<T>()[op](prev, index, value!),
+          ])
+        )(() => prev)
+      ),
+    [setState]
+  )
