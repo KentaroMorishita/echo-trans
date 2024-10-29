@@ -1,25 +1,29 @@
 import React, { useState } from "react"
+import { pipe } from "fp-ts/lib/function"
+import { right, flatMap, match as RTEMatch } from "fp-ts/lib/ReaderTaskEither"
+
 import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
 import { when } from "../services/match"
 import { Map } from "./Map"
-import { TranslationHistory, SortOrder } from "../types"
+import { Config, TranslationHistory, SortOrder } from "../types"
 import { arrayStateHandlers } from "../services/arrayStateHandlers"
+import { checkApiKey } from "../services/checkApiKey"
+import { handleTranslation } from "../services/handleTranslation"
+import { handleTextToSpeech } from "../services/handleTextToSpeech"
 
 export type TranslationListProps = {
+  config: Config
   translations: TranslationHistory[]
   sortOrder: SortOrder
   setTranslations: React.Dispatch<React.SetStateAction<TranslationHistory[]>>
-  handleTranslation: (text: string | undefined) => Promise<TranslationHistory>
-  handleTextToSpeech: (text: string) => Promise<string | undefined>
 }
 
 export const TranslationList: React.FC<TranslationListProps> = ({
+  config,
   translations,
   sortOrder,
   setTranslations,
-  handleTranslation,
-  handleTextToSpeech,
 }) => {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState<string>("")
@@ -53,12 +57,19 @@ export const TranslationList: React.FC<TranslationListProps> = ({
     if (original === editValue) return handleEditFinish()
 
     const timestamp = translations[editIndex].timestamp
-    handleTranslation(editValue)
-      .then((history) => ({ ...history, timestamp, translatedAudioUrl: null }))
-      .then((history) => {
-        update(editIndex)(history)
-        handleEditFinish()
-      })
+
+    pipe(
+      right(editValue),
+      flatMap(checkApiKey),
+      flatMap(handleTranslation),
+      RTEMatch(
+        (error) => console.error(error),
+        (history) => {
+          update(editIndex)({ ...history, timestamp })
+          handleEditFinish()
+        }
+      )
+    )(config)()
   }
 
   const handleSpeech = (index: number, text: string) => {
@@ -68,11 +79,17 @@ export const TranslationList: React.FC<TranslationListProps> = ({
       return new Audio(history.translatedAudioUrl).play()
     }
 
-    handleTextToSpeech(text).then((translatedAudioUrl) => {
-      if (translatedAudioUrl) {
-        update(index)({ ...history, translatedAudioUrl })
-      }
-    })
+    pipe(
+      right(text),
+      flatMap(checkApiKey),
+      flatMap(handleTextToSpeech),
+      RTEMatch(
+        (error) => console.error(error),
+        (translatedAudioUrl) => {
+          update(index)({ ...history, translatedAudioUrl })
+        }
+      )
+    )(config)()
   }
 
   return (

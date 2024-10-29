@@ -1,25 +1,29 @@
-import { TranslationHistory } from "../types"
+import { ReaderTaskEither } from "fp-ts/lib/ReaderTaskEither"
+import { tryCatch } from "fp-ts/lib/TaskEither"
+import { Config, TranslationHistory } from "../types"
+import { handleError } from "./handleError"
 
-export const handleTranslation =
-  (apiKey: string, fromLang: string, toLang: string) =>
-  async (text: string | undefined): Promise<TranslationHistory> => {
-    if (!text) {
-      alert("Please enter the text to translate")
-      throw new Error("No text to translate")
-    }
+export const handleTranslation: (
+  text: string
+) => ReaderTaskEither<Config, Error, TranslationHistory> =
+  (text) =>
+  ({ apiKey, fromLang, toLang }) =>
+    tryCatch(async () => {
+      if (!text) {
+        alert("Please enter the text to translate")
+        throw "No text to translate"
+      }
 
-    const requestBody = {
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You are a translation-only assistant. Your task is to strictly translate the given text from ${fromLang} to ${toLang}, without adding, modifying, or omitting any information. Do not provide explanations, clarifications, or answers. Only return the translation.`,
-        },
-        { role: "user", content: text },
-      ],
-    }
-
-    try {
+      const requestBody = {
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a translation-only assistant. Your task is to strictly translate the given text from ${fromLang} to ${toLang}, without adding, modifying, or omitting any information. Do not provide explanations, clarifications, or answers. Only return the translation.`,
+          },
+          { role: "user", content: text },
+        ],
+      }
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -34,21 +38,15 @@ export const handleTranslation =
 
       if (!response.ok) {
         const error = await response.json()
-        console.error("Error:", error)
-        alert(`Error: ${error.error.message}`)
-        throw new Error(error.error.message)
+        throw error.error.message
       }
 
       const result = await response.json()
-      return {
+      return Promise.resolve<TranslationHistory>({
         original: text,
         translated: result.choices[0].message.content,
         timestamp: new Date(),
         translatedAudioUrl: null,
         isEditing: false,
-      }
-    } catch (error: unknown) {
-      error instanceof Error && alert("Translation error: " + error.message)
-      throw error
-    }
-  }
+      })
+    }, handleError)

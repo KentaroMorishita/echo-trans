@@ -6,6 +6,9 @@ import {
   FaHistory,
   FaDownload,
 } from "react-icons/fa"
+import { pipe } from "fp-ts/lib/function"
+import { right, flatMap, match as RTEMatch } from "fp-ts/lib/ReaderTaskEither"
+
 import { SettingsModal } from "./components/SettingsModal"
 import { AudioRecorder } from "./components/AudioRecorder"
 import { TranslationList } from "./components/TranslationList"
@@ -14,28 +17,28 @@ import { downloadTranslations } from "./services/downloadTranslations"
 import { checkApiKey } from "./services/checkApiKey"
 import { handleAudioData } from "./services/handleAudioData"
 import { handleTranslation } from "./services/handleTranslation"
-import { handleTextToSpeech } from "./services/handleTextToSpeech"
-import { TranslationHistory, SortOrder } from "./types"
+import { arrayStateHandlers } from "./services/arrayStateHandlers"
+import { Language, TranslationHistory, SortOrder } from "./types"
 import { match, when } from "./services/match"
 
 const App: React.FC = () => {
   const [apiKey, setApiKey] = useState("")
-  const [fromLang, setFromLang] = useState("ja")
-  const [toLang, setToLang] = useState("en")
+  const [fromLang, setFromLang] = useState<Language>("ja")
+  const [toLang, setToLang] = useState<Language>("en")
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
+
   const [translations, setTranslations] = useState<TranslationHistory[]>([])
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("")
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
+
+  const config = { apiKey, fromLang, toLang, selectedDeviceId }
+
+  const insert = arrayStateHandlers(setTranslations)("insert")(0)
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem("apiKey")
     when([!!storedApiKey, () => setApiKey(storedApiKey!)])
   }, [])
-
-  const checkApiKeyPipeline = checkApiKey(apiKey)
-  const handleAudioDataByAudioData = handleAudioData(apiKey)
-  const handleTranslationByText = handleTranslation(apiKey, fromLang, toLang)
-  const handleTextToSpeechByText = handleTextToSpeech(apiKey)
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
@@ -71,12 +74,16 @@ const App: React.FC = () => {
         <AudioRecorder
           selectedDeviceId={selectedDeviceId}
           onAudioData={(data: Blob) =>
-            Promise.resolve(data)
-              .then((data) => checkApiKeyPipeline(data))
-              .then((data) => handleAudioDataByAudioData(data))
-              .then((text) => handleTranslationByText(text))
-              .then((history) => setTranslations((prev) => [...prev, history]))
-              .catch((error) => console.error(error))
+            pipe(
+              right(data),
+              flatMap(checkApiKey),
+              flatMap(handleAudioData),
+              flatMap(handleTranslation),
+              RTEMatch(
+                (error) => console.error(error),
+                (history) => insert(history)
+              )
+            )(config)()
           }
         />
       </div>
@@ -119,11 +126,10 @@ const App: React.FC = () => {
           </div>
         </div>
         <TranslationList
+          config={config}
           translations={translations}
           sortOrder={sortOrder}
           setTranslations={setTranslations}
-          handleTranslation={handleTranslationByText}
-          handleTextToSpeech={handleTextToSpeechByText}
         />
       </div>
     </div>

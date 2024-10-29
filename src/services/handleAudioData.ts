@@ -1,34 +1,32 @@
-export const handleAudioData =
-  (apiKey: string) =>
-  async (data: Blob): Promise<string | undefined> => {
-    const formData = new FormData()
-    formData.append("file", data, "audio.wav")
-    formData.append("model", "whisper-1")
+import { ReaderTaskEither } from "fp-ts/lib/ReaderTaskEither"
+import { tryCatch } from "fp-ts/lib/TaskEither"
+import { Config } from "../types"
+import { handleError } from "./handleError"
 
-    try {
+export const handleAudioData: (
+  data: Blob
+) => ReaderTaskEither<Config, Error, string> =
+  (data) =>
+  ({ apiKey }) =>
+    tryCatch(async () => {
+      const body = new FormData()
+      body.append("file", data, "audio.wav")
+      body.append("model", "whisper-1")
+
       const response = await fetch(
         "https://api.openai.com/v1/audio/transcriptions",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: formData,
+          headers: { Authorization: `Bearer ${apiKey}` },
+          body,
         }
       )
 
       if (!response.ok) {
         const error = await response.json()
-        console.error("Error:", error)
-        alert(`Error: ${error.error.message}`)
-        return
+        throw error.error.message
       }
 
       const result = await response.json()
-      return result.text
-    } catch (error: unknown) {
-      error instanceof Error &&
-        alert("Audio processing error: " + error.message)
-      throw error
-    }
-  }
+      return Promise.resolve(result.text)
+    }, handleError)

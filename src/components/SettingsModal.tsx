@@ -4,16 +4,17 @@ import { ApiKeyManager } from "./ApiKeyManager"
 import { LanguageSelector } from "./LanguageSelector"
 import { AudioDeviceSelector } from "./AudioDeviceSelector"
 import { When } from "./Match"
+import { Language } from "../types"
 
 export type SettingsModalProps = {
   isOpen: boolean
   onClose: () => void
   apiKey: string
   setApiKey: (key: string) => void
-  fromLang: string
-  toLang: string
-  setFromLang: (lang: string) => void
-  setToLang: (lang: string) => void
+  fromLang: Language
+  toLang: Language
+  setFromLang: (lang: Language) => void
+  setToLang: (lang: Language) => void
   selectedDeviceId: string
   setSelectedDeviceId: (deviceId: string) => void
 }
