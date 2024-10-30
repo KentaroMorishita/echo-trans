@@ -48,7 +48,7 @@ export const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
       >
         <Map items={devices}>
           {(device) => (
-            <option key={device.deviceId} value={device.deviceId}>
+            <option value={device.deviceId}>
               {device.label || `Audio Device ${device.deviceId}`}
             </option>
           )}

@@ -2,6 +2,7 @@ import { ReaderTaskEither } from "fp-ts/lib/ReaderTaskEither"
 import { tryCatch } from "fp-ts/lib/TaskEither"
 import { Config, TranslationHistory } from "../types"
 import { handleError } from "./handleError"
+import { languageNamesEn } from "../components/LanguageSelector"
 
 export const handleTranslation: (
   text: string
@@ -19,7 +20,7 @@ export const handleTranslation: (
         messages: [
           {
             role: "system",
-            content: `You are a translation-only assistant. Your task is to strictly translate the given text from ${fromLang} to ${toLang}, without adding, modifying, or omitting any information. Do not provide explanations, clarifications, or answers. Only return the translation.`,
+            content: `You are a translation-only assistant. Your task is to strictly translate the given text from ${languageNamesEn[fromLang]} to ${languageNamesEn[toLang]}, without adding, modifying, or omitting any information. Do not provide explanations, clarifications, or answers. Only return the translation.`,
           },
           { role: "user", content: text },
         ],

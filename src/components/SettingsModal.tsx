@@ -36,16 +36,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <h2 className="text-xl font-semibold mb-4">Settings</h2>
           <div className="space-y-4">
             <ApiKeyManager apiKey={apiKey} setApiKey={configSetter("apiKey")} />
-            <LanguageSelector
-              label="From"
-              value={fromLang}
-              onChange={configSetter("fromLang")}
-            />
-            <LanguageSelector
-              label="To"
-              value={toLang}
-              onChange={configSetter("toLang")}
-            />
+            <div className="flex gap-2">
+              <LanguageSelector
+                label="From Language"
+                value={fromLang}
+                localStorageKey="fromLang"
+                onChange={configSetter("fromLang")}
+              />
+              <LanguageSelector
+                label="To Language"
+                value={toLang}
+                localStorageKey="toLang"
+                onChange={configSetter("toLang")}
+              />
+            </div>
             <AudioDeviceSelector
               selectedDeviceId={selectedDeviceId}
               setSelectedDeviceId={configSetter("selectedDeviceId")}
