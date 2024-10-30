@@ -32,15 +32,25 @@ const App: React.FC = () => {
     fromLang: "ja",
     toLang: "en",
     selectedDeviceId: "",
+    enableVAD: true,
   })
 
   const configSetter = objectStateUpdater(setConfig)
   const insertHistory = arrayStateHandlers(setTranslations)("insert")(Infinity)
 
-  // prettier-ignore
   useEffect(() => {
-    const storedConfig = (key: keyof Config) => localStorage.getItem(key) || config[key]
-    Object.keys(config).forEach(key => configSetter(key as keyof Config)(storedConfig(key as keyof Config)))
+    // prettier-ignore
+    const storedConfig = (key: keyof Config) => {
+      const local = localStorage.getItem(key)
+      const value = config[key]
+      return typeof value === "boolean"
+        ? local === null ? value : local === "true"
+        : local || value;
+    }
+
+    ;(Object.keys(config) as Array<keyof Config>).map((key) =>
+      configSetter(key)(storedConfig(key))
+    )
   }, [])
 
   return (

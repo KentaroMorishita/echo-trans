@@ -17,6 +17,7 @@ export type Config = {
   fromLang: Language
   toLang: Language
   selectedDeviceId: string
+  enableVAD: boolean
 }
 
 export type TranslationHistory = {

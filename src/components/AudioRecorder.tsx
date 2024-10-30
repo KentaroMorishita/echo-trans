@@ -58,7 +58,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          deviceId: config.selectedDeviceId ? { exact: config.selectedDeviceId } : undefined,
+          deviceId: config.selectedDeviceId
+            ? { exact: config.selectedDeviceId }
+            : undefined,
           channelCount: 2,
           sampleRate: 48000,
           autoGainControl: true, // 自動ゲイン制御を有効にする
@@ -250,7 +252,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             const speechDuration = speechEnd - (speechStartRef.current || 0)
             console.log(`VAD: Speech ended, duration: ${speechDuration}ms`)
 
-            if (speechDuration > MIN_SPEECH_DURATION) {
+            // VADフラグON且つ、音声が一定期間以上続いた場合、録音を停止して音声データを処理
+            if (config.enableVAD && speechDuration > MIN_SPEECH_DURATION) {
               console.log(
                 "VAD: Speech duration exceeded threshold, stopping recording"
               )

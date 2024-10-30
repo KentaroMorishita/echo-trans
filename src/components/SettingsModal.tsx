@@ -2,6 +2,7 @@ import React from "react"
 import { FaTimes } from "react-icons/fa"
 import { ApiKeyManager } from "./ApiKeyManager"
 import { LanguageSelector } from "./LanguageSelector"
+import { VADSelector } from "./VADSelector"
 import { AudioDeviceSelector } from "./AudioDeviceSelector"
 import { When } from "./Match"
 import { Config } from "../types"
@@ -17,7 +18,7 @@ export type SettingsModalProps = {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
-  config: { apiKey, fromLang, toLang, selectedDeviceId },
+  config: { apiKey, fromLang, toLang, selectedDeviceId, enableVAD },
   setConfig,
 }) => {
   const configSetter = objectStateUpdater(setConfig)
@@ -50,6 +51,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onChange={configSetter("toLang")}
               />
             </div>
+            <VADSelector
+              enableVAD={enableVAD}
+              setEnableVAD={configSetter("enableVAD")}
+            />
             <AudioDeviceSelector
               selectedDeviceId={selectedDeviceId}
               setSelectedDeviceId={configSetter("selectedDeviceId")}
