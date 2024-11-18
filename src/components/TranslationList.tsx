@@ -3,25 +3,23 @@ import { useRBox } from "../hooks/useRBox"
 import { translationsBox } from "../box/translations"
 
 import { pipe } from "fp-ts/lib/function"
-import { right, flatMap, match as RTEMatch } from "fp-ts/lib/ReaderTaskEither"
+import { right, flatMap, match as TEMatch } from "fp-ts/lib/TaskEither"
 
 import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
 import { when } from "../services/match"
 import { Map } from "./Map"
-import { Config, SortOrder } from "../types"
+import { SortOrder } from "../types"
 import { arrayRBoxHandlers } from "../services/arrayRBoxHandlers"
 import { checkApiKey } from "../services/checkApiKey"
 import { handleTranslation } from "../services/handleTranslation"
 import { handleTextToSpeech } from "../services/handleTextToSpeech"
 
 export type TranslationListProps = {
-  config: Config
   sortOrder: SortOrder
 }
 
 export const TranslationList: React.FC<TranslationListProps> = ({
-  config,
   sortOrder,
 }) => {
   const [translations] = useRBox(translationsBox)
@@ -62,14 +60,14 @@ export const TranslationList: React.FC<TranslationListProps> = ({
       right(editValue),
       flatMap(checkApiKey),
       flatMap(handleTranslation),
-      RTEMatch(
+      TEMatch(
         (error) => console.error(error),
         (history) => {
           update(editIndex)({ ...history, timestamp })
           handleEditFinish()
         }
       )
-    )(config)()
+    )()
   }
 
   const handleSpeech = (index: number, text: string) => {
@@ -83,13 +81,13 @@ export const TranslationList: React.FC<TranslationListProps> = ({
       right(text),
       flatMap(checkApiKey),
       flatMap(handleTextToSpeech),
-      RTEMatch(
+      TEMatch(
         (error) => console.error(error),
         (translatedAudioUrl) => {
           update(index)({ ...history, translatedAudioUrl })
         }
       )
-    )(config)()
+    )()
   }
 
   return (

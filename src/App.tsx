@@ -12,7 +12,7 @@ import {
   FaDownload,
 } from "react-icons/fa"
 import { pipe } from "fp-ts/lib/function"
-import { right, flatMap, match as RTEMatch } from "fp-ts/lib/ReaderTaskEither"
+import { right, flatMap, match as TEMatch } from "fp-ts/lib/TaskEither"
 
 import { SettingsModal } from "./components/SettingsModal"
 import { AudioRecorder } from "./components/AudioRecorder"
@@ -79,11 +79,11 @@ const App: React.FC = () => {
               flatMap(checkApiKey),
               flatMap(handleAudioData),
               flatMap(handleTranslation),
-              RTEMatch(
+              TEMatch(
                 (error) => console.error(error),
                 (history) => insertHistory(history)
               )
-            )(config)()
+            )()
           }
         />
       </div>
@@ -125,7 +125,7 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
-        <TranslationList config={config} sortOrder={sortOrder} />
+        <TranslationList sortOrder={sortOrder} />
       </div>
     </div>
   )
