@@ -1,7 +1,8 @@
-import React, { useState } from "react"
+import React from "react"
 
 import { useRBox } from "./hooks/useRBox"
 import { configBox } from "./box/config"
+import { translationsBox } from "./box/translations"
 
 import {
   FaCog,
@@ -21,7 +22,7 @@ import { downloadTranslations } from "./services/downloadTranslations"
 import { checkApiKey } from "./services/checkApiKey"
 import { handleAudioData } from "./services/handleAudioData"
 import { handleTranslation } from "./services/handleTranslation"
-import { arrayStateHandlers } from "./services/arrayStateHandlers"
+import { arrayRBoxHandlers } from "./services/arrayRBoxHandlers"
 import { Config, TranslationHistory, SortOrder } from "./types"
 import { match } from "./services/match"
 
@@ -40,13 +41,12 @@ const storedConfig = (key: keyof Config) => {
 })
 
 const App: React.FC = () => {
+  const [config] = useRBox<Config>(configBox)
+  const [translations] = useRBox<TranslationHistory[]>(translationsBox)
+  const insertHistory = arrayRBoxHandlers(translationsBox)("insert")(Infinity)
+
   const [isSettingsOpen, isSettingsOpenBox] = useRBox<boolean>(false)
   const [sortOrder, sortOrderBox] = useRBox<SortOrder>("newest")
-
-  const [translations, setTranslations] = useState<TranslationHistory[]>([])
-
-  const [config] = useRBox<Config>(configBox)
-  const insertHistory = arrayStateHandlers(setTranslations)("insert")(Infinity)
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
@@ -125,12 +125,7 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
-        <TranslationList
-          config={config}
-          translations={translations}
-          sortOrder={sortOrder}
-          setTranslations={setTranslations}
-        />
+        <TranslationList config={config} sortOrder={sortOrder} />
       </div>
     </div>
   )

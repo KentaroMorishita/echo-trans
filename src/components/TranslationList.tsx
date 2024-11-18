@@ -1,4 +1,7 @@
-import React, { useState } from "react"
+import React from "react"
+import { useRBox } from "../hooks/useRBox"
+import { translationsBox } from "../box/translations"
+
 import { pipe } from "fp-ts/lib/function"
 import { right, flatMap, match as RTEMatch } from "fp-ts/lib/ReaderTaskEither"
 
@@ -6,27 +9,24 @@ import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
 import { when } from "../services/match"
 import { Map } from "./Map"
-import { Config, TranslationHistory, SortOrder } from "../types"
-import { arrayStateHandlers } from "../services/arrayStateHandlers"
+import { Config, SortOrder } from "../types"
+import { arrayRBoxHandlers } from "../services/arrayRBoxHandlers"
 import { checkApiKey } from "../services/checkApiKey"
 import { handleTranslation } from "../services/handleTranslation"
 import { handleTextToSpeech } from "../services/handleTextToSpeech"
 
 export type TranslationListProps = {
   config: Config
-  translations: TranslationHistory[]
   sortOrder: SortOrder
-  setTranslations: React.Dispatch<React.SetStateAction<TranslationHistory[]>>
 }
 
 export const TranslationList: React.FC<TranslationListProps> = ({
   config,
-  translations,
   sortOrder,
-  setTranslations,
 }) => {
-  const [editIndex, setEditIndex] = useState<number | null>(null)
-  const [editValue, setEditValue] = useState<string>("")
+  const [translations] = useRBox(translationsBox)
+  const [editIndex, editIndexBox] = useRBox<number | null>(null)
+  const [editValue, editValueBox] = useRBox<string>("")
 
   const sortedTranslations = translations.map((item, index) => ({
     item,
@@ -37,18 +37,18 @@ export const TranslationList: React.FC<TranslationListProps> = ({
     sortedTranslations.reverse()
   }
 
-  const handlers = arrayStateHandlers(setTranslations)
+  const handlers = arrayRBoxHandlers(translationsBox)
   const update = handlers("update")
   const remove = handlers("remove")
 
   const handleEdit = (index: number, original: string) => {
-    setEditIndex(index)
-    setEditValue(original)
+    editIndexBox.setValue(() => index)
+    editValueBox.setValue(() => original)
   }
 
   const handleEditFinish = () => {
-    setEditIndex(null)
-    setEditValue("")
+    editIndexBox.setValue(() => null)
+    editValueBox.setValue(() => "")
   }
 
   const handleEditSubmit = () => {
@@ -104,7 +104,9 @@ export const TranslationList: React.FC<TranslationListProps> = ({
                   <When exp={editIndex === index}>
                     <textarea
                       value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
+                      onChange={(e) =>
+                        editValueBox.setValue(() => e.target.value)
+                      }
                       onBlur={() => handleEditSubmit()}
                       onKeyDown={(e) =>
                         when([
