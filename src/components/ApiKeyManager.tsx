@@ -1,39 +1,31 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
 import { FaSave, FaTrash } from "react-icons/fa"
 
-export type ApiKeyManagerProps = {
-  apiKey: string
-  setApiKey: (key: string) => void
-}
+import { useRBox } from "../hooks/useRBox"
+import { configBox } from "../box/config"
 
-export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ setApiKey }) => {
-  const [apiKey, setLocalApiKey] = useState("")
-  const [apiKeyVisible, setApiKeyVisible] = useState(false)
-
-  useEffect(() => {
-    const storedApiKey = localStorage.getItem("apiKey")
-    if (storedApiKey) {
-      setLocalApiKey(storedApiKey)
-      setApiKey(storedApiKey)
-      setApiKeyVisible(false)
-    } else {
-      setApiKeyVisible(true)
-    }
-  }, [])
+export const ApiKeyManager: React.FC = () => {
+  const [config] = useRBox(configBox)
+  const { apiKey, apiKeyVisible } = config
+  const setApiKey = (value: string) =>
+    configBox.setValue((config) => ({ ...config, apiKey: value }))
+  const setApiKeyVisible = (value: boolean) =>
+    configBox.setValue((config) => ({ ...config, apiKeyVisible: value }))
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalApiKey(e.target.value)
+    setApiKey(e.target.value)
   }
 
   const saveApiKey = () => {
     localStorage.setItem("apiKey", apiKey)
+    localStorage.setItem("apiKeyVisible", "false")
     setApiKey(apiKey)
     setApiKeyVisible(false)
   }
 
   const clearApiKey = () => {
     localStorage.removeItem("apiKey")
-    setLocalApiKey("")
+    localStorage.setItem("apiKeyVisible", "true")
     setApiKey("")
     setApiKeyVisible(true)
   }

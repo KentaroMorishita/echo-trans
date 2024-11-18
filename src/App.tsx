@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
+
+import { useRBox } from "./hooks/useRBox"
+import { configBox } from "./box/config"
+
 import {
   FaCog,
   FaSortUp,
@@ -18,40 +22,31 @@ import { checkApiKey } from "./services/checkApiKey"
 import { handleAudioData } from "./services/handleAudioData"
 import { handleTranslation } from "./services/handleTranslation"
 import { arrayStateHandlers } from "./services/arrayStateHandlers"
-import { objectStateUpdater } from "./services/objectStateUpdater"
 import { Config, TranslationHistory, SortOrder } from "./types"
 import { match } from "./services/match"
 
+const storedConfig = (key: keyof Config) => {
+  const local = localStorage.getItem(key)
+  const value = configBox.getValue()[key]
+  return typeof value === "boolean"
+    ? local === null
+      ? value
+      : local === "true"
+    : local || value
+}
+
+;(Object.keys(configBox.getValue()) as Array<keyof Config>).map((key) => {
+  configBox.setValue((value) => ({ ...value, [key]: storedConfig(key) }))
+})
+
 const App: React.FC = () => {
+  const [isSettingsOpen, isSettingsOpenBox] = useRBox<boolean>(false)
+  const [sortOrder, sortOrderBox] = useRBox<SortOrder>("newest")
+
   const [translations, setTranslations] = useState<TranslationHistory[]>([])
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest")
 
-  const [config, setConfig] = useState<Config>({
-    apiKey: "",
-    fromLang: "ja",
-    toLang: "en",
-    selectedDeviceId: "",
-    enableVAD: true,
-  })
-
-  const configSetter = objectStateUpdater(setConfig)
+  const [config] = useRBox<Config>(configBox)
   const insertHistory = arrayStateHandlers(setTranslations)("insert")(Infinity)
-
-  useEffect(() => {
-    // prettier-ignore
-    const storedConfig = (key: keyof Config) => {
-      const local = localStorage.getItem(key)
-      const value = config[key]
-      return typeof value === "boolean"
-        ? local === null ? value : local === "true"
-        : local || value;
-    }
-
-    ;(Object.keys(config) as Array<keyof Config>).map((key) =>
-      configSetter(key)(storedConfig(key))
-    )
-  }, [])
 
   return (
     <div className="min-h-screen bg-gray-200 p-4">
@@ -60,7 +55,7 @@ const App: React.FC = () => {
           EchoTrans
         </h1>
         <button
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => isSettingsOpenBox.setValue(() => true)}
           className="text-gray-700 hover:text-gray-900"
           aria-label="Open Settings"
         >
@@ -71,9 +66,7 @@ const App: React.FC = () => {
       {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        config={config}
-        setConfig={setConfig}
+        onClose={() => isSettingsOpenBox.setValue(() => false)}
       />
 
       {/* Audio Recorder */}
@@ -112,7 +105,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() =>
-                setSortOrder((prev) =>
+                sortOrderBox.setValue((prev) =>
                   match<SortOrder>([
                     [prev === "oldest", () => "newest"],
                     [prev === "newest", () => "oldest"],

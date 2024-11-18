@@ -5,24 +5,16 @@ import { LanguageSelector } from "./LanguageSelector"
 import { VADSelector } from "./VADSelector"
 import { AudioDeviceSelector } from "./AudioDeviceSelector"
 import { When } from "./Match"
-import { Config } from "../types"
-import { objectStateUpdater } from "../services/objectStateUpdater"
 
 export type SettingsModalProps = {
   isOpen: boolean
   onClose: () => void
-  config: Config
-  setConfig: (value: React.SetStateAction<Config>) => void
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
-  config: { apiKey, fromLang, toLang, selectedDeviceId, enableVAD },
-  setConfig,
 }) => {
-  const configSetter = objectStateUpdater(setConfig)
-
   return (
     <When exp={isOpen}>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -36,29 +28,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
           <h2 className="text-xl font-semibold mb-4">Settings</h2>
           <div className="space-y-4">
-            <ApiKeyManager apiKey={apiKey} setApiKey={configSetter("apiKey")} />
+            <ApiKeyManager />
             <div className="flex gap-2">
-              <LanguageSelector
-                label="From Language"
-                value={fromLang}
-                localStorageKey="fromLang"
-                onChange={configSetter("fromLang")}
-              />
-              <LanguageSelector
-                label="To Language"
-                value={toLang}
-                localStorageKey="toLang"
-                onChange={configSetter("toLang")}
-              />
+              <LanguageSelector label="From Language" localKey="fromLang" />
+              <LanguageSelector label="To Language" localKey="toLang" />
             </div>
-            <VADSelector
-              enableVAD={enableVAD}
-              setEnableVAD={configSetter("enableVAD")}
-            />
-            <AudioDeviceSelector
-              selectedDeviceId={selectedDeviceId}
-              setSelectedDeviceId={configSetter("selectedDeviceId")}
-            />
+            <VADSelector />
+            <AudioDeviceSelector />
           </div>
         </div>
       </div>

@@ -1,12 +1,16 @@
 import React from "react"
+
+import { useRBox } from "../hooks/useRBox"
+import { configBox } from "../box/config"
+
 import { Language, LanguageNameEn, LanguageNameJa } from "../types"
 import { Map } from "./Map"
 
+type KeyType = "fromLang" | "toLang"
+
 export type LanguageSelectorProps = {
   label: string
-  value: string
-  localStorageKey: string
-  onChange: (value: Language) => void
+  localKey: KeyType
 }
 
 export const languages: Language[] = ["ja", "en", "vi", "zh", "ko"]
@@ -27,19 +31,23 @@ export const languageNamesJa: Record<Language, LanguageNameJa> = {
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   label,
-  value,
-  localStorageKey,
-  onChange,
+  localKey,
 }) => {
+  const [config] = useRBox(configBox)
+  const setLanguage = (localKey: KeyType, language: Language) => {
+    configBox.setValue((config) => ({ ...config, [localKey]: language }))
+  }
+
   return (
     <div className="mb-4 w-full">
       <label className="block font-semibold mb-2">{label}:</label>
       <select
-        value={value}
+        value={config[localKey]}
         onChange={(e) => {
           const language = e.target.value as Language
-          localStorage.setItem(localStorageKey, language)
-          onChange(language)
+          console.log(localKey, language)
+          localStorage.setItem(localKey, language)
+          setLanguage(localKey, language)
         }}
         className="p-2 border rounded-md w-full"
       >

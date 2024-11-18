@@ -14,6 +14,7 @@ export type LanguageNameJa =
 
 export type Config = {
   apiKey: string
+  apiKeyVisible: boolean
   fromLang: Language
   toLang: Language
   selectedDeviceId: string

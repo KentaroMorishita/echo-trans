@@ -1,26 +1,27 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
+
+import { useRBox } from "../hooks/useRBox"
+import { configBox } from "../box/config"
+
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither"
 import { Map } from "./Map"
 import { handleError } from "../services/handleError"
 
-export type AudioDeviceSelectorProps = {
-  selectedDeviceId: string
-  setSelectedDeviceId: (deviceId: string) => void
-}
+export const AudioDeviceSelector: React.FC = () => {
+  const [config] = useRBox(configBox)
+  const setSelectedDeviceId = (value: string) => {
+    configBox.setValue((config) => ({ ...config, selectedDeviceId: value }))
+  }
 
-export const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
-  selectedDeviceId,
-  setSelectedDeviceId,
-}) => {
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
+  const [devices, devicesBox] = useRBox<MediaDeviceInfo[]>([])
 
   useEffect(() => {
     const fetchDevices: TaskEither<Error, void> = tryCatch(async () => {
       const allDevices = await navigator.mediaDevices.enumerateDevices()
       const audioDevices = allDevices.filter((v) => v.kind === "audioinput")
-      setDevices(audioDevices)
+      devicesBox.setValue(() => audioDevices)
 
-      if (audioDevices.length > 0 && !selectedDeviceId) {
+      if (audioDevices.length > 0 && !config.selectedDeviceId) {
         setSelectedDeviceId(audioDevices[0].deviceId)
       }
     }, handleError)
@@ -38,7 +39,7 @@ export const AudioDeviceSelector: React.FC<AudioDeviceSelectorProps> = ({
     <div className="mb-4">
       <label className="block font-semibold mb-2">Select Audio Device:</label>
       <select
-        value={selectedDeviceId}
+        value={config.selectedDeviceId}
         onChange={(e) => {
           const deviceId = e.target.value
           localStorage.setItem("selectedDeviceId", deviceId)
