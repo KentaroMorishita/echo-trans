@@ -12,7 +12,7 @@ import {
   FaDownload,
 } from "react-icons/fa"
 import { pipe } from "fp-ts/lib/function"
-import { right, flatMap, match as TEMatch } from "fp-ts/lib/TaskEither"
+import * as TaskEither from "fp-ts/lib/TaskEither"
 
 import { SettingsModal } from "./components/SettingsModal"
 import { AudioRecorder } from "./components/AudioRecorder"
@@ -41,7 +41,6 @@ const storedConfig = (key: keyof Config) => {
 })
 
 const App: React.FC = () => {
-  const [config] = useRBox<Config>(configBox)
   const [translations] = useRBox<TranslationHistory[]>(translationsBox)
   const insertHistory = arrayRBoxHandlers(translationsBox)("insert")(Infinity)
 
@@ -72,14 +71,13 @@ const App: React.FC = () => {
       {/* Audio Recorder */}
       <div className="mb-4">
         <AudioRecorder
-          config={config}
           onAudioData={(data: Blob) =>
             pipe(
-              right(data),
-              flatMap(checkApiKey),
-              flatMap(handleAudioData),
-              flatMap(handleTranslation),
-              TEMatch(
+              TaskEither.right(data),
+              TaskEither.flatMap(checkApiKey),
+              TaskEither.flatMap(handleAudioData),
+              TaskEither.flatMap(handleTranslation),
+              TaskEither.match(
                 (error) => console.error(error),
                 (history) => insertHistory(history)
               )

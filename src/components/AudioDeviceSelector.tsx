@@ -3,7 +3,7 @@ import React, { useEffect } from "react"
 import { useRBox } from "../hooks/useRBox"
 import { configBox } from "../box/config"
 
-import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither"
+import * as TaskEither from "fp-ts/lib/TaskEither"
 import { Map } from "./Map"
 import { handleError } from "../services/handleError"
 
@@ -16,15 +16,16 @@ export const AudioDeviceSelector: React.FC = () => {
   const [devices, devicesBox] = useRBox<MediaDeviceInfo[]>([])
 
   useEffect(() => {
-    const fetchDevices: TaskEither<Error, void> = tryCatch(async () => {
-      const allDevices = await navigator.mediaDevices.enumerateDevices()
-      const audioDevices = allDevices.filter((v) => v.kind === "audioinput")
-      devicesBox.setValue(() => audioDevices)
+    const fetchDevices: TaskEither.TaskEither<Error, void> =
+      TaskEither.tryCatch(async () => {
+        const allDevices = await navigator.mediaDevices.enumerateDevices()
+        const audioDevices = allDevices.filter((v) => v.kind === "audioinput")
+        devicesBox.setValue(() => audioDevices)
 
-      if (audioDevices.length > 0 && !config.selectedDeviceId) {
-        setSelectedDeviceId(audioDevices[0].deviceId)
-      }
-    }, handleError)
+        if (audioDevices.length > 0 && !config.selectedDeviceId) {
+          setSelectedDeviceId(audioDevices[0].deviceId)
+        }
+      }, handleError)
 
     fetchDevices()
 

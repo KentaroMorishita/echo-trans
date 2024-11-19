@@ -3,7 +3,7 @@ import { useRBox } from "../hooks/useRBox"
 import { translationsBox } from "../box/translations"
 
 import { pipe } from "fp-ts/lib/function"
-import { right, flatMap, match as TEMatch } from "fp-ts/lib/TaskEither"
+import * as TaskEither from "fp-ts/lib/TaskEither"
 
 import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
@@ -57,10 +57,10 @@ export const TranslationList: React.FC<TranslationListProps> = ({
     const timestamp = translations[editIndex].timestamp
 
     pipe(
-      right(editValue),
-      flatMap(checkApiKey),
-      flatMap(handleTranslation),
-      TEMatch(
+      TaskEither.right(editValue),
+      TaskEither.flatMap(checkApiKey),
+      TaskEither.flatMap(handleTranslation),
+      TaskEither.match(
         (error) => console.error(error),
         (history) => {
           update(editIndex)({ ...history, timestamp })
@@ -78,10 +78,10 @@ export const TranslationList: React.FC<TranslationListProps> = ({
     }
 
     pipe(
-      right(text),
-      flatMap(checkApiKey),
-      flatMap(handleTextToSpeech),
-      TEMatch(
+      TaskEither.right(text),
+      TaskEither.flatMap(checkApiKey),
+      TaskEither.flatMap(handleTextToSpeech),
+      TaskEither.match(
         (error) => console.error(error),
         (translatedAudioUrl) => {
           update(index)({ ...history, translatedAudioUrl })

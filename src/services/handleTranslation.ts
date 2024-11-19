@@ -1,5 +1,4 @@
-import { TaskEither } from "fp-ts/lib/TaskEither"
-import { tryCatch } from "fp-ts/lib/TaskEither"
+import * as TaskEither from "fp-ts/lib/TaskEither"
 import { TranslationHistory } from "../types"
 import { handleError } from "./handleError"
 import { languageNamesEn } from "../components/LanguageSelector"
@@ -8,8 +7,8 @@ import { configBox } from "../box/config"
 
 export const handleTranslation: (
   text: string
-) => TaskEither<Error, TranslationHistory> = (text) =>
-  tryCatch(async () => {
+) => TaskEither.TaskEither<Error, TranslationHistory> = (text) =>
+  TaskEither.tryCatch(async () => {
     const { apiKey, fromLang, toLang } = configBox.getValue()
     if (!text) {
       alert("Please enter the text to translate")

@@ -1,13 +1,12 @@
-import { TaskEither } from "fp-ts/lib/TaskEither"
-import { tryCatch } from "fp-ts/lib/TaskEither"
+import * as TaskEither from "fp-ts/lib/TaskEither"
 import { handleError } from "./handleError"
 
 import { configBox } from "../box/config"
 
-export const handleAudioData: (data: Blob) => TaskEither<Error, string> = (
-  data
-) =>
-  tryCatch(async () => {
+export const handleAudioData: (
+  data: Blob
+) => TaskEither.TaskEither<Error, string> = (data) =>
+  TaskEither.tryCatch(async () => {
     const { apiKey } = configBox.getValue()
 
     const body = new FormData()
