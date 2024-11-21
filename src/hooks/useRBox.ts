@@ -2,10 +2,15 @@ import { useMemo } from "react"
 import { useSyncExternalStore } from "react"
 import { RBox } from "../lib/rbox"
 
-export const useRBox = <T>(
+export function useRBox<T>(source: RBox<T>): [T, RBox<T>]
+export function useRBox<T>(
+  source: T | (() => T | RBox<T>),
+  deps?: React.DependencyList
+): [T, RBox<T>]
+export function useRBox<T>(
   source: T | RBox<T> | (() => T | RBox<T>),
   deps: React.DependencyList = []
-): [T, RBox<T>] => {
+): [T, RBox<T>] {
   const box = useMemo<RBox<T>>(() => {
     const value =
       typeof source === "function" ? (source as () => T | RBox<T>)() : source
