@@ -1,13 +1,14 @@
 import React from "react"
 
-import { useRBox } from "../hooks/useRBox"
+import { useRBox, set } from "../hooks/useRBox"
 import { configBox } from "../box/config"
 
 export const VADSelector: React.FC = () => {
   const [config] = useRBox(configBox)
-  const setEnableVAD = (value: boolean) => {
-    configBox.setValue((config) => ({ ...config, enableVAD: value }))
-  }
+  const setConfig = set(configBox)
+
+  const setEnableVAD = (value: boolean) =>
+    setConfig({ ...config, enableVAD: value })
 
   return (
     <div className="mb-4">

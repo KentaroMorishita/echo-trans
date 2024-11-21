@@ -1,15 +1,17 @@
-import { useRef } from "react"
+import { useMemo } from "react"
 import { useSyncExternalStore } from "react"
-import { rbox, RBox } from "../lib/rbox"
+import { RBox } from "../lib/rbox"
 
-export const useRBox = <T>(initialValueOrBox: T | RBox<T>): [T, RBox<T>] => {
-  const box = useRef<RBox<T>>(
-    initialValueOrBox instanceof Object && (initialValueOrBox as RBox<T>).isRBox
-      ? (initialValueOrBox as RBox<T>)
-      : rbox(initialValueOrBox as T)
-  ).current
+export const useRBox = <T>(
+  source: T | RBox<T> | (() => T | RBox<T>),
+  deps: React.DependencyList = []
+): [T, RBox<T>] => {
+  const box = useMemo<RBox<T>>(() => {
+    const value =
+      typeof source === "function" ? (source as () => T | RBox<T>)() : source
+    return RBox.isRBox(value) ? (value as RBox<T>) : RBox.pack(value as T)
+  }, deps)
 
-  // React の再レンダリングと統合
   const value = useSyncExternalStore(
     (onStoreChange) => {
       const key = box.subscribe(onStoreChange)
@@ -20,3 +22,5 @@ export const useRBox = <T>(initialValueOrBox: T | RBox<T>): [T, RBox<T>] => {
 
   return [value, box]
 }
+
+export const set = RBox.set

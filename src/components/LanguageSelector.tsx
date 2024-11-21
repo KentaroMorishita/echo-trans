@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useRBox } from "../hooks/useRBox"
+import { useRBox, set } from "../hooks/useRBox"
 import { configBox } from "../box/config"
 
 import { Language, LanguageNameEn, LanguageNameJa } from "../types"
@@ -34,9 +34,10 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   localKey,
 }) => {
   const [config] = useRBox(configBox)
-  const setLanguage = (localKey: KeyType, language: Language) => {
-    configBox.setValue((config) => ({ ...config, [localKey]: language }))
-  }
+  const setConfig = set(configBox)
+
+  const setLanguage = (localKey: KeyType, language: Language) =>
+    setConfig({ ...config, [localKey]: language })
 
   return (
     <div className="mb-4 w-full">

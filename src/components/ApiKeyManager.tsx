@@ -1,20 +1,21 @@
 import React from "react"
 import { FaSave, FaTrash } from "react-icons/fa"
 
-import { useRBox } from "../hooks/useRBox"
+import { useRBox, set } from "../hooks/useRBox"
 import { configBox } from "../box/config"
 
 export const ApiKeyManager: React.FC = () => {
   const [config] = useRBox(configBox)
-  const { apiKey, apiKeyVisible } = config
-  const setApiKey = (value: string) =>
-    configBox.setValue((config) => ({ ...config, apiKey: value }))
-  const setApiKeyVisible = (value: boolean) =>
-    configBox.setValue((config) => ({ ...config, apiKeyVisible: value }))
+  const setConfig = set(configBox)
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { apiKey, apiKeyVisible } = config
+
+  const setApiKey = (value: string) => setConfig({ ...config, apiKey: value })
+  const setApiKeyVisible = (value: boolean) =>
+    setConfig({ ...config, apiKeyVisible: value })
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setApiKey(e.target.value)
-  }
 
   const saveApiKey = () => {
     localStorage.setItem("apiKey", apiKey)

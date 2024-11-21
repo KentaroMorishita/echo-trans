@@ -1,5 +1,5 @@
 import React from "react"
-import { useRBox } from "../hooks/useRBox"
+import { useRBox, set } from "../hooks/useRBox"
 import { translationsBox } from "../box/translations"
 
 import { pipe } from "fp-ts/lib/function"
@@ -25,6 +25,8 @@ export const TranslationList: React.FC<TranslationListProps> = ({
   const [translations] = useRBox(translationsBox)
   const [editIndex, editIndexBox] = useRBox<number | null>(null)
   const [editValue, editValueBox] = useRBox<string>("")
+  const setEditIndex = set(editIndexBox)
+  const setEditValue = set(editValueBox)
 
   const sortedTranslations = translations.map((item, index) => ({
     item,
@@ -40,13 +42,13 @@ export const TranslationList: React.FC<TranslationListProps> = ({
   const remove = handlers("remove")
 
   const handleEdit = (index: number, original: string) => {
-    editIndexBox.setValue(() => index)
-    editValueBox.setValue(() => original)
+    setEditIndex(index)
+    setEditValue(original)
   }
 
   const handleEditFinish = () => {
-    editIndexBox.setValue(() => null)
-    editValueBox.setValue(() => "")
+    setEditIndex(null)
+    setEditValue("")
   }
 
   const handleEditSubmit = () => {
@@ -102,9 +104,7 @@ export const TranslationList: React.FC<TranslationListProps> = ({
                   <When exp={editIndex === index}>
                     <textarea
                       value={editValue}
-                      onChange={(e) =>
-                        editValueBox.setValue(() => e.target.value)
-                      }
+                      onChange={(e) => setEditValue(e.target.value)}
                       onBlur={() => handleEditSubmit()}
                       onKeyDown={(e) =>
                         when([

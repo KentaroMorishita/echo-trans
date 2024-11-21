@@ -1,7 +1,7 @@
-import { rbox } from "../lib/rbox"
+import { RBox } from "../lib/rbox"
 import { Config } from "../types"
 
-export const configBox = rbox<Config>({
+export const configBox = RBox.pack<Config>({
   apiKey: "",
   apiKeyVisible: true,
   fromLang: "ja",

@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useRBox } from "./hooks/useRBox"
+import { useRBox, set } from "./hooks/useRBox"
 import { configBox } from "./box/config"
 import { translationsBox } from "./box/translations"
 
@@ -47,6 +47,9 @@ const App: React.FC = () => {
   const [isSettingsOpen, isSettingsOpenBox] = useRBox<boolean>(false)
   const [sortOrder, sortOrderBox] = useRBox<SortOrder>("newest")
 
+  const setIsSettingsOpen = set(isSettingsOpenBox)
+  const setSortOrder = set(sortOrderBox)
+
   return (
     <div className="min-h-screen bg-gray-200 p-4">
       <div className="flex justify-between items-center mb-2">
@@ -54,7 +57,7 @@ const App: React.FC = () => {
           EchoTrans
         </h1>
         <button
-          onClick={() => isSettingsOpenBox.setValue(() => true)}
+          onClick={() => setIsSettingsOpen(true)}
           className="text-gray-700 hover:text-gray-900"
           aria-label="Open Settings"
         >
@@ -65,7 +68,7 @@ const App: React.FC = () => {
       {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => isSettingsOpenBox.setValue(() => false)}
+        onClose={() => setIsSettingsOpen(false)}
       />
 
       {/* Audio Recorder */}
@@ -103,11 +106,11 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() =>
-                sortOrderBox.setValue((prev) =>
+                setSortOrder(
                   match<SortOrder>([
-                    [prev === "oldest", () => "newest"],
-                    [prev === "newest", () => "oldest"],
-                  ])(() => prev)
+                    [sortOrder === "oldest", () => "newest"],
+                    [sortOrder === "newest", () => "oldest"],
+                  ])(() => sortOrder)
                 )
               }
               className="text-gray-700 hover:text-gray-900 focus:outline-none"

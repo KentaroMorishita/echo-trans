@@ -1,4 +1,4 @@
-import { rbox } from "../lib/rbox"
+import { RBox } from "../lib/rbox"
 import { TranslationHistory } from "../types"
 
 // import importData from "../translations.json"
@@ -8,4 +8,4 @@ import { TranslationHistory } from "../types"
 //   timestamp: new Date(history.timestamp),
 // }))
 
-export const translationsBox = rbox<TranslationHistory[]>([])
+export const translationsBox = RBox.pack<TranslationHistory[]>([])

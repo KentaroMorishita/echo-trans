@@ -1,5 +1,5 @@
 import { useRef } from "react"
-import { useRBox } from "../hooks/useRBox"
+import { useRBox, set } from "../hooks/useRBox"
 import { configBox } from "../box/config"
 
 export const useAudioRecorder = (onAudioData: (data: Blob) => void) => {
@@ -14,12 +14,10 @@ export const useAudioRecorder = (onAudioData: (data: Blob) => void) => {
   const gainNodeRef = useRef<GainNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
-  // ラッパー関数
-  const setIsRecording = (value: boolean) =>
-    isRecordingBox.setValue(() => value)
-  const setAudioUrl = (value: string | null) =>
-    audioUrlBox.setValue(() => value)
-  const setIsSpeaking = (value: boolean) => isSpeakingBox.setValue(() => value)
+  // setter
+  const setIsRecording = set(isRecordingBox)
+  const setAudioUrl = set(audioUrlBox)
+  const setIsSpeaking = set(isSpeakingBox)
 
   const startRecording = async () => {
     try {

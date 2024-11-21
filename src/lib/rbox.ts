@@ -1,4 +1,4 @@
-type Observer<T> = (value: T) => void
+export type Observer<T> = (value: T) => void
 
 export type RBox<T> = {
   readonly isRBox: true
@@ -16,7 +16,7 @@ export type RBox<T> = {
   readonly detachHandlers: (() => void)[]
 }
 
-export const rbox = <T>(initialValue: T): RBox<T> => {
+const rbox = <T>(initialValue: T): RBox<T> => {
   let value: T = initialValue
   const observers: Map<string, Observer<T>> = new Map()
   const detachHandlers: (() => void)[] = []
@@ -121,5 +121,16 @@ export const rbox = <T>(initialValue: T): RBox<T> => {
   }
 }
 
-export const isRBox = <T>(value: any): value is RBox<T> =>
-  value && typeof value === "object" && value.isRBox === true
+export const set =
+  <T>(box: RBox<T>) =>
+  (value: T) =>
+    box.setValue(() => value)
+
+const isRBox = <T>(value: any): value is RBox<T> =>
+  value && typeof value === "object" && (value as RBox<T>).isRBox === true
+
+export const RBox = {
+  pack: rbox,
+  set,
+  isRBox,
+} as const
