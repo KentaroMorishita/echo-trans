@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { Box } from "../lib/box"
+import { Box } from "f-box-core"
 
 export function useBox<T>(source: Box<T>): [T, Box<T>]
 export function useBox<T>(

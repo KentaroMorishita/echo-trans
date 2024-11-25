@@ -1,4 +1,4 @@
-import { RBox } from "../lib/rbox"
+import { RBox } from "f-box-core"
 import { Config } from "../types"
 
 export const configBox = RBox.pack<Config>({

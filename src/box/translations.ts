@@ -1,4 +1,4 @@
-import { RBox } from "../lib/rbox"
+import { RBox } from "f-box-core"
 import { TranslationHistory } from "../types"
 
 // import importData from "../translations.json"

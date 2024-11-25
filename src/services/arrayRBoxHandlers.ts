@@ -1,4 +1,4 @@
-import { RBox } from "../lib/rbox"
+import { RBox } from "f-box-core"
 import { match } from "./match"
 
 export type Operation = "update" | "insert" | "remove"

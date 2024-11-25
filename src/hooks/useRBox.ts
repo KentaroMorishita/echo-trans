@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { useSyncExternalStore } from "react"
-import { RBox } from "../lib/rbox"
+import { RBox } from "f-box-core"
 
 export function useRBox<T>(source: RBox<T>): [T, RBox<T>]
 export function useRBox<T>(
