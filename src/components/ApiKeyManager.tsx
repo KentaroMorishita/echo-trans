@@ -1,7 +1,7 @@
 import React from "react"
 import { FaSave, FaTrash } from "react-icons/fa"
 
-import { useRBox, set } from "../hooks/useRBox"
+import { useRBox, set } from "f-box-react"
 import { configBox } from "../box/config"
 
 export const ApiKeyManager: React.FC = () => {

@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useRBox, set } from "../hooks/useRBox"
+import { useRBox, set } from "f-box-react"
 import { configBox } from "../box/config"
 
 import { Language, LanguageNameEn, LanguageNameJa } from "../types"

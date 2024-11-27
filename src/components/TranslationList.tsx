@@ -1,5 +1,5 @@
 import React from "react"
-import { useRBox, set } from "../hooks/useRBox"
+import { useRBox, set } from "f-box-react"
 import { translationsBox } from "../box/translations"
 
 import { pipe } from "fp-ts/lib/function"
