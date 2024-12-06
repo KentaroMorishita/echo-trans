@@ -1,2 +1,4 @@
+import { Either } from "f-box-core"
+
 export const handleError = (reason: unknown) =>
-  reason instanceof Error ? reason : new Error(String(reason))
+  Either.left(reason instanceof Error ? reason : new Error(String(reason)))

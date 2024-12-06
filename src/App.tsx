@@ -11,8 +11,6 @@ import {
   FaHistory,
   FaDownload,
 } from "react-icons/fa"
-import { pipe } from "fp-ts/lib/function"
-import * as TaskEither from "fp-ts/lib/TaskEither"
 
 import { SettingsModal } from "./components/SettingsModal"
 import { AudioRecorder } from "./components/AudioRecorder"
@@ -25,6 +23,8 @@ import { handleTranslation } from "./services/handleTranslation"
 import { arrayRBoxHandlers } from "./services/arrayRBoxHandlers"
 import { Config, TranslationHistory, SortOrder } from "./types"
 import { match } from "./services/match"
+
+import { Task } from "f-box-core"
 
 const storedConfig = (key: keyof Config) => {
   const local = localStorage.getItem(key)
@@ -75,16 +75,20 @@ const App: React.FC = () => {
       <div className="mb-4">
         <AudioRecorder
           onAudioData={(data: Blob) =>
-            pipe(
-              TaskEither.right(data),
-              TaskEither.flatMap(checkApiKey),
-              TaskEither.flatMap(handleAudioData),
-              TaskEither.flatMap(handleTranslation),
-              TaskEither.match(
-                (error) => console.error(error),
-                (history) => insertHistory(history)
+            Task.pack(data)
+              [">>="](checkApiKey)
+              [">>="](handleAudioData)
+              [">>="](handleTranslation)
+              ["<$>"]((result) =>
+                result.match(
+                  (error: Error) => {
+                    alert(error.message)
+                    console.error(error.message)
+                  },
+                  (history: TranslationHistory) => insertHistory(history)
+                )
               )
-            )()
+              .run()
           }
         />
       </div>

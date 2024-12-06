@@ -1,32 +1,28 @@
-import * as TaskEither from "fp-ts/lib/TaskEither"
+import { Task, Either } from "f-box-core"
 import { handleError } from "./handleError"
 
 import { configBox } from "../box/config"
 
-export const handleAudioData: (
-  data: Blob
-) => TaskEither.TaskEither<Error, string> = (data) =>
-  TaskEither.tryCatch(async () => {
-    const { apiKey } = configBox.getValue()
+export const handleAudioData = (data: Either<Error, Blob>) =>
+  Task.tryCatch<Either<Error, string>>(() => {
+    if (Either.isLeft(data)) return data
 
+    const { apiKey } = configBox.getValue()
     const body = new FormData()
-    body.append("file", data, "audio.wav")
+    body.append("file", data.getValue(), "audio.wav")
     body.append("model", "whisper-1")
 
-    const response = await fetch(
-      "https://api.openai.com/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}` },
-        body,
+    return fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body,
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json()
+        throw error.error.message
       }
-    )
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw error.error.message
-    }
-
-    const result = await response.json()
-    return Promise.resolve(result.text)
+      const result = await response.json()
+      return Either.right(result.text)
+    })
   }, handleError)

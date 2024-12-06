@@ -2,8 +2,7 @@ import React from "react"
 import { useRBox, set } from "f-box-react"
 import { translationsBox } from "../box/translations"
 
-import { pipe } from "fp-ts/lib/function"
-import * as TaskEither from "fp-ts/lib/TaskEither"
+import { Task } from "f-box-core"
 
 import { FaClock, FaMicrophone, FaTrash, FaVolumeUp } from "react-icons/fa"
 import { Match, When } from "./Match"
@@ -58,18 +57,22 @@ export const TranslationList: React.FC<TranslationListProps> = ({
 
     const timestamp = translations[editIndex].timestamp
 
-    pipe(
-      TaskEither.right(editValue),
-      TaskEither.flatMap(checkApiKey),
-      TaskEither.flatMap(handleTranslation),
-      TaskEither.match(
-        (error) => console.error(error),
-        (history) => {
-          update(editIndex)({ ...history, timestamp })
-          handleEditFinish()
-        }
+    Task.pack(editValue)
+      [">>="](checkApiKey)
+      [">>="](handleTranslation)
+      ["<$>"]((result) =>
+        result.match(
+          (error) => {
+            alert(error.message)
+            console.error(error.message)
+          },
+          (history) => {
+            update(editIndex)({ ...history, timestamp })
+            handleEditFinish()
+          }
+        )
       )
-    )()
+      .run()
   }
 
   const handleSpeech = (index: number, text: string) => {
@@ -79,17 +82,21 @@ export const TranslationList: React.FC<TranslationListProps> = ({
       return new Audio(history.translatedAudioUrl).play()
     }
 
-    pipe(
-      TaskEither.right(text),
-      TaskEither.flatMap(checkApiKey),
-      TaskEither.flatMap(handleTextToSpeech),
-      TaskEither.match(
-        (error) => console.error(error),
-        (translatedAudioUrl) => {
-          update(index)({ ...history, translatedAudioUrl })
-        }
+    Task.pack(text)
+      [">>="](checkApiKey)
+      [">>="](handleTextToSpeech)
+      ["<$>"]((result) =>
+        result.match(
+          (error) => {
+            alert(error.message)
+            console.error(error.message)
+          },
+          (translatedAudioUrl) => {
+            update(index)({ ...history, translatedAudioUrl })
+          }
+        )
       )
-    )()
+      .run()
   }
 
   return (
