@@ -96,22 +96,35 @@ export const useWaveformVisualizer = ({
       }
       
       // VAD判定
+      console.log(`VAD: rms=${rms.toFixed(2)}, speaking=${thresholds.speakingThreshold}, silence=${thresholds.silenceThreshold}, isSpeaking=${isSpeakingRef.current}`)
+      
       if (rms > thresholds.speakingThreshold) {
+        // Speaking threshold を超えた場合
         if (!isSpeakingRef.current) {
+          console.log("VAD: Transitioning to speaking state")
           isSpeakingRef.current = true
           onSpeakingDetected()
         }
+        // 既存のsilenceTimerをクリア
         if (silenceTimerRef.current !== null) {
+          console.log("VAD: Clearing silence timer due to speaking")
           clearTimeout(silenceTimerRef.current)
           silenceTimerRef.current = null
         }
-      } else if (rms < thresholds.silenceThreshold) {
+      } else {
+        // Speaking threshold 以下の場合（silenceThreshold関係なく）
         if (isSpeakingRef.current && silenceTimerRef.current === null) {
+          console.log(`VAD: Starting silence timer (duration: ${silenceDuration}ms)`)
           silenceTimerRef.current = window.setTimeout(() => {
+            console.log("VAD: Silence timeout triggered, transitioning to silent state")
             isSpeakingRef.current = false
             onSilenceDetected()
             silenceTimerRef.current = null
           }, silenceDuration)
+        } else if (isSpeakingRef.current && silenceTimerRef.current !== null) {
+          console.log("VAD: Already waiting for silence timeout")
+        } else if (!isSpeakingRef.current) {
+          console.log("VAD: Already in silent state")
         }
       }
 

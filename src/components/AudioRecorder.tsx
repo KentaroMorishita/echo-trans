@@ -29,21 +29,23 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   // VAD状態更新のコールバック
   const handleSpeakingDetected = useCallback(() => {
-    console.log("Speaking detected")
+    console.log("AudioRecorder: Speaking detected, setting isSpeaking to true")
     setIsSpeaking(true)
     
     // 自動録音モードで話し声を検出したら録音開始
     if (config.recordingMode === "auto" && !isRecording) {
+      console.log("AudioRecorder: Auto mode - starting recording")
       startRecording()
     }
   }, [setIsSpeaking, config.recordingMode, isRecording, startRecording])
 
   const handleSilenceDetected = useCallback(() => {
-    console.log("Silence detected")  
+    console.log("AudioRecorder: Silence detected, setting isSpeaking to false")  
     setIsSpeaking(false)
     
     // 自動録音モードで無音を検出したら録音停止
     if (config.recordingMode === "auto" && isRecording) {
+      console.log("AudioRecorder: Auto mode - stopping recording")
       stopRecording()
     }
   }, [setIsSpeaking, config.recordingMode, isRecording, stopRecording])
