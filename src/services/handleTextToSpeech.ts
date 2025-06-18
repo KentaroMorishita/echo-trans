@@ -9,7 +9,7 @@ export const handleTextToSpeech = (text: Either<Error, string>) =>
     const { apiKey } = configBox.getValue()
     const requestBody = {
       model: "tts-1",
-      input: text,
+      input: text.getValue(),
       voice: "alloy",
     }
 
