@@ -33,11 +33,24 @@ export const ApiKeyManager: React.FC = () => {
 
   return apiKeyVisible ? (
     <div className="mb-4">
-      <label className="block font-semibold mb-2">Enter API Key:</label>
+      <label className="block font-semibold mb-2">Enter OpenAI API Key:</label>
+      <p className="text-sm text-gray-600 mb-2">
+        Used for Whisper (speech-to-text) and ChatGPT (translation).
+        Get your key from{" "}
+        <a
+          href="https://platform.openai.com/api-keys"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          OpenAI Platform
+        </a>
+      </p>
       <input
         type="text"
         value={apiKey}
         onChange={handleApiKeyChange}
+        placeholder="sk-..."
         className="w-full mb-2 p-2 border rounded-md"
       />
       <button
