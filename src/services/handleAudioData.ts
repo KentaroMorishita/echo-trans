@@ -8,8 +8,21 @@ export const handleAudioData = (data: Either<Error, Blob>) =>
     if (Either.isLeft(data)) return data
 
     const { apiKey, speechModel } = configBox.getValue()
+    const audioBlob = data.getValue()
     const body = new FormData()
-    body.append("file", data.getValue(), "audio.wav")
+    
+    // MIMEタイプから適切なファイル拡張子を決定
+    const mimeType = audioBlob.type
+    let fileName = "audio.wav" // デフォルト
+    if (mimeType.includes("webm")) {
+      fileName = "audio.webm"
+    } else if (mimeType.includes("mp3")) {
+      fileName = "audio.mp3"
+    } else if (mimeType.includes("mp4")) {
+      fileName = "audio.mp4"
+    }
+    
+    body.append("file", audioBlob, fileName)
     body.append("model", speechModel)
 
     return fetch("https://api.openai.com/v1/audio/transcriptions", {

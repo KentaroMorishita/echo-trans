@@ -52,8 +52,15 @@ export const useAudioRecorder = (onAudioData: (data: Blob) => void) => {
       source.connect(gainNode)
       gainNode.connect(analyser)
 
+      // WAV形式をサポートしているかチェック
+      let mimeType = "audio/wav"
+      if (!MediaRecorder.isTypeSupported("audio/wav")) {
+        // WAVがサポートされていない場合はWebMを使用
+        mimeType = "audio/webm"
+      }
+      
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
+        mimeType,
       })
       mediaRecorderRef.current = mediaRecorder
       audioChunksRef.current = []
@@ -65,8 +72,10 @@ export const useAudioRecorder = (onAudioData: (data: Blob) => void) => {
       }
 
       mediaRecorder.onstop = () => {
+        // 使用したmimeTypeでBlobを作成
+        const usedMimeType = mediaRecorder.mimeType || mimeType
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
+          type: usedMimeType,
         })
         const url = URL.createObjectURL(audioBlob)
         setAudioUrl(url)
