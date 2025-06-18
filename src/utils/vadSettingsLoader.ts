@@ -8,17 +8,35 @@ export const loadVADSettings = (): VADSettings => {
     try {
       const parsed = JSON.parse(saved)
       console.log("Parsed VAD settings:", parsed)
-      return parsed
-    } catch (e) {
+      
+      // 新形式かチェック
+      if (parsed.startThreshold !== undefined && parsed.stopThreshold !== undefined) {
+        return parsed
+      }
+      
+      // 旧形式から新形式に変換
+      if (parsed.speakingThreshold !== undefined) {
+        console.log("Converting old VAD settings format to new format")
+        return {
+          startThreshold: -16,
+          stopThreshold: -20,
+          minSpeechDuration: 200,
+          minSilenceDuration: 200,
+          smoothingFactor: 0.9,
+        }
+      }
+    } catch {
       console.warn("Failed to parse saved VAD settings, using defaults")
     }
   }
 
-  // デフォルト値
+  // デフォルト値（新形式）
   const defaults = {
-    speakingThreshold: 25,
-    silenceThreshold: 15,
-    silenceDuration: 10,
+    startThreshold: -16,        // -16 dB で発話開始
+    stopThreshold: -20,         // -20 dB で発話停止  
+    minSpeechDuration: 200,     // 最低200ms発話
+    minSilenceDuration: 200,    // 最低200ms沈黙
+    smoothingFactor: 0.9,       // 平滑化係数（90%）
   }
   console.log("Using default VAD settings:", defaults)
   return defaults

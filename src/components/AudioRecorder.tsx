@@ -1,9 +1,7 @@
-import React, { useRef, useCallback } from "react"
+import React from "react"
 import { FaMicrophone, FaStop } from "react-icons/fa"
 import { useRBox } from "f-box-react"
 import { useAudioRecorder } from "../hooks/useAudioRecorder"
-import { useWaveformVisualizer } from "../hooks/useWaveformVisualizer"
-import { VoiceLevelMeter } from "./VoiceLevelMeter"
 import { configBox } from "../box/config"
 
 export type AudioRecorderProps = {
@@ -16,129 +14,109 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const [config] = useRBox(configBox)
   const {
     isRecording,
-    isSpeaking,
     currentAudioLevel,
+    vadState,
     startRecording,
     stopRecording,
-    analyserRef,
-    setIsSpeaking,
-    setCurrentAudioLevel,
   } = useAudioRecorder(onAudioData)
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-
-  // VAD状態更新のコールバック
-  const handleSpeakingDetected = useCallback(() => {
-    console.log("AudioRecorder: Speaking detected, setting isSpeaking to true")
-    setIsSpeaking(true)
-    
-    // 自動録音モードで話し声を検出したら録音開始
-    if (config.recordingMode === "auto" && !isRecording) {
-      console.log("AudioRecorder: Auto mode - starting recording")
-      startRecording()
+  // VAD状態の表示用ラベル
+  const getVADStateLabel = () => {
+    switch (vadState) {
+      case 'speaking': return 'Speaking'
+      case 'pending_speech': return 'Detecting...'
+      case 'pending_silence': return 'Ending...'
+      case 'silent': return 'Silent'
+      default: return 'Silent'
     }
-  }, [setIsSpeaking, config.recordingMode, isRecording, startRecording])
+  }
 
-  const handleSilenceDetected = useCallback(() => {
-    console.log("AudioRecorder: Silence detected, setting isSpeaking to false")  
-    setIsSpeaking(false)
-    
-    // 自動録音モードで無音を検出したら録音停止
-    if (config.recordingMode === "auto" && isRecording) {
-      console.log("AudioRecorder: Auto mode - stopping recording")
-      stopRecording()
+  const getVADStateColor = () => {
+    switch (vadState) {
+      case 'speaking': return 'text-blue-600'
+      case 'pending_speech': return 'text-yellow-600'
+      case 'pending_silence': return 'text-orange-600'
+      case 'silent': return 'text-gray-500'
+      default: return 'text-gray-500'
     }
-  }, [setIsSpeaking, config.recordingMode, isRecording, stopRecording])
-
-  const handleAudioLevelUpdate = useCallback((level: number) => {
-    setCurrentAudioLevel(level)
-  }, [setCurrentAudioLevel])
-
-  // 波形描画とVADの初期化（設定から動的に取得）
-  useWaveformVisualizer({
-    isRecording,
-    analyserRef,
-    canvasRef,
-    onSpeakingDetected: handleSpeakingDetected,
-    onSilenceDetected: handleSilenceDetected,
-    onAudioLevelUpdate: handleAudioLevelUpdate,
-    thresholds: {
-      speakingThreshold: config.vadSettings.speakingThreshold,
-      silenceThreshold: config.vadSettings.silenceThreshold,
-    },
-    silenceDuration: config.vadSettings.silenceDuration,
-    isAutoMode: config.recordingMode === "auto",
-  })
+  }
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/50 p-4">
       <div className="flex items-center justify-between gap-4">
         {/* 左側: 録音コントロール */}
         <div className="flex gap-2">
-          {config.recordingMode === "manual" ? (
-            <>
-              <button
-                onClick={startRecording}
-                disabled={isRecording}
-                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isRecording
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                }`}
-              >
-                <FaMicrophone className="mr-1.5 text-sm" />
-                {isRecording ? 'Recording...' : 'Record'}
-              </button>
+          <button
+            onClick={startRecording}
+            disabled={isRecording}
+            className={`flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-28 ${
+              isRecording
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            }`}
+          >
+            <FaMicrophone className="mr-1.5 text-sm" />
+            {isRecording ? 'Recording...' : 'Record'}
+          </button>
 
-              {isRecording && (
-                <button
-                  onClick={stopRecording}
-                  className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all duration-200"
-                >
-                  <FaStop className="mr-1.5 text-sm" />
-                  Stop
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 border border-green-200">
-              <FaMicrophone className="mr-1.5 text-sm" />
-              {isRecording ? 'Auto Recording...' : 'Auto VAD Ready'}
-            </div>
+          {isRecording && (
+            <button
+              onClick={() => stopRecording(true)}
+              className="flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white shadow-sm transition-all duration-200"
+            >
+              <FaStop className="mr-1.5 text-sm" />
+              Stop
+            </button>
           )}
         </div>
 
-        {/* 中央: コンパクトな波形表示（録音中またはオートモード時） */}
-        {(isRecording || config.recordingMode === "auto") && (
-          <div className="flex-1 max-w-xs">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-8 bg-gray-800 rounded border border-gray-300"
-            />
+        {/* 中央: 音声レベル表示（録音中またはVAD有効時） */}
+        {(isRecording || config.enableVAD) && (
+          <div className="flex-1 max-w-sm">
+            <div className="text-xs text-gray-600 mb-1">
+              Audio Level: {currentAudioLevel === -Infinity ? '-∞' : currentAudioLevel.toFixed(1)} dB
+            </div>
+            <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all duration-100 ${
+                  vadState === 'speaking' ? 'bg-blue-500' : 
+                  vadState === 'pending_speech' ? 'bg-yellow-500' :
+                  vadState === 'pending_silence' ? 'bg-orange-500' :
+                  'bg-gray-400'
+                }`}
+                style={{ 
+                  width: `${Math.max(0, Math.min(100, ((currentAudioLevel + 100) / 100) * 100))}%` 
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>-100dB</span>
+              <span>0dB</span>
+            </div>
           </div>
         )}
 
-        {/* 右側: ステータスインジケーター（録音中またはオートモード時） */}
-        {(isRecording || config.recordingMode === "auto") && (
+        {/* 右側: ステータスインジケーター（録音中またはVAD有効時） */}
+        {(isRecording || config.enableVAD) && (
           <div className="flex items-center gap-3">
             {/* VAD状態 */}
             <div className="flex items-center gap-1">
-              {isSpeaking ? (
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              ) : (
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-              )}
-              <span className={`text-xs font-medium w-14 ${isSpeaking ? 'text-blue-600' : 'text-gray-500'}`}>
-                {isSpeaking ? 'Speaking' : 'Silent'}
+              <div className={`w-2 h-2 rounded-full ${
+                vadState === 'speaking' ? 'bg-blue-500 animate-pulse' :
+                vadState === 'pending_speech' ? 'bg-yellow-500 animate-pulse' :
+                vadState === 'pending_silence' ? 'bg-orange-500 animate-pulse' :
+                'bg-gray-300'
+              }`}></div>
+              <span className={`text-xs font-medium w-20 ${getVADStateColor()}`}>
+                {getVADStateLabel()}
               </span>
             </div>
 
-            {/* 音声レベルメーター */}
-            <VoiceLevelMeter 
-              isRecording={isRecording} 
-              currentLevel={currentAudioLevel} 
-              isSpeaking={isSpeaking}
-            />
+            {/* しきい値インジケーター */}
+            <div className="text-xs text-gray-500">
+              <div>Start: {config.vadSettings.startThreshold}dB</div>
+              <div>Stop: {config.vadSettings.stopThreshold}dB</div>
+            </div>
           </div>
         )}
       </div>

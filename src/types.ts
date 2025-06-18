@@ -14,12 +14,13 @@ export type LanguageNameJa =
 
 export type SpeechModel = "whisper-1" | "gpt-4o-mini-transcribe"
 
-export type RecordingMode = "manual" | "auto"
 
 export type VADSettings = {
-  speakingThreshold: number
-  silenceThreshold: number
-  silenceDuration: number
+  startThreshold: number      // 発話開始しきい値 (dB: -60 to 0)
+  stopThreshold: number       // 発話停止しきい値 (dB: -60 to 0)
+  minSpeechDuration: number   // 最小発話時間 (ms)
+  minSilenceDuration: number  // 最小沈黙時間 (ms)
+  smoothingFactor: number     // 平滑化係数 (0-1)
 }
 
 export type Config = {
@@ -31,7 +32,6 @@ export type Config = {
   enableVAD: boolean
   speechModel: SpeechModel
   vadSettings: VADSettings
-  recordingMode: RecordingMode
 }
 
 export type TranslationHistory = {

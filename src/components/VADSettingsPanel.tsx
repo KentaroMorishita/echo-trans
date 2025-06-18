@@ -2,7 +2,6 @@ import React from "react"
 import { useRBox, set } from "f-box-react"
 import { configBox } from "../box/config"
 import { saveVADSettings } from "../utils/vadSettingsLoader"
-import { VADCalibrationPanel } from "./VADCalibrationPanel"
 
 export const VADSettingsPanel: React.FC = () => {
   const [config] = useRBox(configBox)
@@ -27,9 +26,11 @@ export const VADSettingsPanel: React.FC = () => {
 
   const resetToDefaults = () => {
     const defaultSettings = {
-      speakingThreshold: 25,
-      silenceThreshold: 15,
-      silenceDuration: 10,
+      startThreshold: -16,        // -16 dB で発話開始
+      stopThreshold: -20,         // -20 dB で発話停止
+      minSpeechDuration: 200,     // 最低200ms発話
+      minSilenceDuration: 200,    // 最低200ms沈黙
+      smoothingFactor: 0.9,       // 平滑化係数（90%）
     }
     console.log("resetToDefaults - resetting to:", defaultSettings)
     setConfig({ ...config, vadSettings: defaultSettings })
@@ -37,107 +38,144 @@ export const VADSettingsPanel: React.FC = () => {
     console.log("resetToDefaults - localStorage after save:", localStorage.getItem("vadSettings"))
   }
 
-  const applyPreset = (preset: typeof config.vadSettings) => {
-    console.log("applyPreset - applying preset:", preset)
-    setConfig({ ...config, vadSettings: preset })
-    saveVADSettings(preset)
-    console.log("applyPreset - localStorage after save:", localStorage.getItem("vadSettings"))
-  }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg">VAD Settings</h3>
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold text-lg">Voice Activity Detection (VAD)</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Automatically adjust VAD thresholds based on your environment
+          </p>
+        </div>
         <button
           onClick={resetToDefaults}
-          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors"
+          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors whitespace-nowrap"
         >
-          Reset to Defaults
+          Reset to Default
         </button>
       </div>
 
-      {/* Calibration Panel */}
-      <VADCalibrationPanel />
 
       <div className="space-y-3">
-        {/* Speaking Threshold */}
+        {/* Start Threshold */}
         <div>
           <label className="block text-sm font-medium mb-1">
-            Speaking Threshold: {config.vadSettings.speakingThreshold}
+            Speech Start Threshold: {config.vadSettings.startThreshold} dB
           </label>
           <input
             type="range"
-            min="1"
-            max="100"
-            value={config.vadSettings.speakingThreshold}
-            onChange={(e) => updateVADSetting("speakingThreshold", Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Higher values require louder speech to trigger detection
-          </p>
-        </div>
-
-        {/* Silence Threshold */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Silence Threshold: {config.vadSettings.silenceThreshold}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="50"
-            value={config.vadSettings.silenceThreshold}
-            onChange={(e) => updateVADSetting("silenceThreshold", Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Lower values detect silence more easily
-          </p>
-        </div>
-
-        {/* Silence Duration */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Silence Duration: {config.vadSettings.silenceDuration}ms
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="100"
+            min="-60"
+            max="0"
             step="1"
-            value={config.vadSettings.silenceDuration}
-            onChange={(e) => updateVADSetting("silenceDuration", Number(e.target.value))}
+            value={config.vadSettings.startThreshold}
+            onChange={(e) => updateVADSetting("startThreshold", Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>High Sensitivity</span>
+            <span>Normal</span>
+            <span>Low Sensitivity</span>
+          </div>
           <p className="text-xs text-gray-500 mt-1">
-            How long to wait before considering speech as ended
+            Sound level required to start recording. Use <strong>higher sensitivity (left)</strong> in quiet environments, <strong>lower sensitivity (right)</strong> in noisy environments.
           </p>
         </div>
-      </div>
 
-      {/* Preset Buttons */}
-      <div className="pt-3 border-t">
-        <p className="text-sm font-medium mb-2">Environment Presets:</p>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => applyPreset({ speakingThreshold: 15, silenceThreshold: 8, silenceDuration: 10 })}
-            className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded transition-colors"
-          >
-            Quiet Room
-          </button>
-          <button
-            onClick={() => applyPreset({ speakingThreshold: 25, silenceThreshold: 15, silenceDuration: 40 })}
-            className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors"
-          >
-            Normal
-          </button>
-          <button
-            onClick={() => applyPreset({ speakingThreshold: 40, silenceThreshold: 25, silenceDuration: 20 })}
-            className="px-3 py-1 text-sm bg-orange-100 hover:bg-orange-200 text-orange-800 rounded transition-colors"
-          >
-            Noisy Environment
-          </button>
+        {/* Stop Threshold */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Speech Stop Threshold: {config.vadSettings.stopThreshold} dB
+          </label>
+          <input
+            type="range"
+            min="-60"
+            max="0"
+            step="1"
+            value={config.vadSettings.stopThreshold}
+            onChange={(e) => updateVADSetting("stopThreshold", Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>High Sensitivity</span>
+            <span>Normal</span>
+            <span>Low Sensitivity</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Sound level required to stop recording. Should be <strong>lower than start threshold</strong> to prevent interruptions during speech.
+          </p>
+        </div>
+
+        {/* Min Speech Duration */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Minimum Speech Duration: {(config.vadSettings.minSpeechDuration / 1000).toFixed(1)}s
+          </label>
+          <input
+            type="range"
+            min="100"
+            max="1000"
+            step="50"
+            value={config.vadSettings.minSpeechDuration}
+            onChange={(e) => updateVADSetting("minSpeechDuration", Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>Short (0.1s)</span>
+            <span>Normal (0.5s)</span>
+            <span>Long (1.0s)</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Minimum duration to speak before recording starts. <strong>Shorter values are more responsive</strong>, <strong>longer values reduce false triggers</strong>.
+          </p>
+        </div>
+
+        {/* Min Silence Duration */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Minimum Silence Duration: {(config.vadSettings.minSilenceDuration / 1000).toFixed(1)}s
+          </label>
+          <input
+            type="range"
+            min="200"
+            max="2000"
+            step="100"
+            value={config.vadSettings.minSilenceDuration}
+            onChange={(e) => updateVADSetting("minSilenceDuration", Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>Short (0.2s)</span>
+            <span>Normal (1.0s)</span>
+            <span>Long (2.0s)</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Duration of silence before stopping recording. <strong>Shorter values stop quickly</strong>, <strong>longer values continue recording through pauses</strong>.
+          </p>
+        </div>
+
+        {/* Smoothing Factor */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Volume Smoothing: {Math.round(config.vadSettings.smoothingFactor * 100)}%
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={config.vadSettings.smoothingFactor}
+            onChange={(e) => updateVADSetting("smoothingFactor", Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>Sensitive (0%)</span>
+            <span>Normal (70%)</span>
+            <span>Stable (100%)</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Smooths volume changes over time. <strong>Lower values are more sensitive</strong>, <strong>higher values provide more stable operation</strong>.
+          </p>
         </div>
       </div>
     </div>

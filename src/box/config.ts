@@ -17,10 +17,6 @@ const loadToLang = (): Language => {
   return (saved as Language) || "en"
 }
 
-const loadRecordingMode = (): "manual" | "auto" => {
-  const saved = localStorage.getItem("recordingMode")
-  return (saved as "manual" | "auto") || "manual"
-}
 
 const loadSpeechModel = (): "whisper-1" | "gpt-4o-mini-transcribe" => {
   const saved = localStorage.getItem("speechModel")
@@ -36,6 +32,5 @@ export const configBox = RBox.pack<Config>({
   enableVAD: loadEnableVAD(),
   speechModel: loadSpeechModel(),
   vadSettings: loadVADSettings(),
-  recordingMode: loadRecordingMode(),
 })
 
