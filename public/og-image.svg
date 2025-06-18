@@ -1,0 +1,52 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Main Title -->
+  <text x="600" y="200" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="80" font-weight="bold">
+    EchoTrans
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="280" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="36">
+    リアルタイム音声翻訳アプリ
+  </text>
+  
+  <!-- Feature Icons -->
+  <g transform="translate(300, 350)">
+    <!-- Microphone Icon -->
+    <circle cx="0" cy="0" r="40" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2"/>
+    <rect x="-15" y="-20" width="30" height="40" rx="15" fill="none" stroke="white" stroke-width="3"/>
+    <line x1="-20" y1="30" x2="20" y2="30" stroke="white" stroke-width="3"/>
+    <line x1="0" y1="30" x2="0" y2="50" stroke="white" stroke-width="3"/>
+    <text x="0" y="80" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18">音声認識</text>
+  </g>
+  
+  <g transform="translate(600, 350)">
+    <!-- Translation Icon -->
+    <circle cx="0" cy="0" r="40" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2"/>
+    <text x="0" y="8" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">翻</text>
+    <text x="0" y="80" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18">AI翻訳</text>
+  </g>
+  
+  <g transform="translate(900, 350)">
+    <!-- Real-time Icon -->
+    <circle cx="0" cy="0" r="40" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2"/>
+    <circle cx="0" cy="0" r="20" fill="none" stroke="white" stroke-width="3"/>
+    <line x1="0" y1="-20" x2="0" y2="-10" stroke="white" stroke-width="3"/>
+    <line x1="0" y1="0" x2="15" y2="-10" stroke="white" stroke-width="3"/>
+    <text x="0" y="80" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18">リアルタイム</text>
+  </g>
+  
+  <!-- Powered by -->
+  <text x="600" y="550" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="Arial, sans-serif" font-size="24">
+    Powered by OpenAI Whisper &amp; ChatGPT
+  </text>
+</svg>
