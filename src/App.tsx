@@ -161,7 +161,7 @@ const App: React.FC = () => {
       <footer className="bg-white/50 backdrop-blur-sm border-t border-gray-200/50 mt-12">
         <div className="max-w-6xl mx-auto px-4 py-6 text-center">
           <p className="text-sm text-gray-600">
-            Powered by OpenAI Whisper & GPT-4o-mini • Built with React & TypeScript
+            Created by Kentaro Morishita
           </p>
         </div>
       </footer>
