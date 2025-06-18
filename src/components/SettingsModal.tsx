@@ -3,7 +3,7 @@ import { FaTimes } from "react-icons/fa"
 import { TabPanel, Tab } from "./TabPanel"
 import { BasicSettingsTab } from "./settings/BasicSettingsTab"
 import { AudioSettingsTab } from "./settings/AudioSettingsTab"
-import { AdvancedSettingsTab } from "./settings/AdvancedSettingsTab"
+import { VADSettingsTab } from "./settings/VADSettingsTab"
 import { When } from "./Match"
 
 export type SettingsModalProps = {
@@ -27,9 +27,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       content: <AudioSettingsTab />,
     },
     {
-      id: "advanced",
-      label: "Advanced",
-      content: <AdvancedSettingsTab />,
+      id: "vad",
+      label: "VAD",
+      content: <VADSettingsTab />,
     },
   ]
 

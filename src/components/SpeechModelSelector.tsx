@@ -15,6 +15,7 @@ export const SpeechModelSelector: React.FC = () => {
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const speechModel = e.target.value as SpeechModel
     setConfig({ ...config, speechModel })
+    localStorage.setItem("speechModel", speechModel)
   }
 
   return (

@@ -26,7 +26,7 @@ export const useWaveformVisualizer = ({
     speakingThreshold: 25,
     silenceThreshold: 15,
   },
-  silenceDuration = 1500,
+  silenceDuration = 100,
   isAutoMode = false,
 }: UseWaveformVisualizerProps) => {
   const animationFrameIdRef = useRef<number | null>(null)
@@ -89,15 +89,15 @@ export const useWaveformVisualizer = ({
 
       // VAD処理
       const rms = calculateRMS(dataArray)
-      
+
       // 音声レベルを更新
       if (onAudioLevelUpdate) {
         onAudioLevelUpdate(rms)
       }
-      
+
       // VAD判定
       console.log(`VAD: rms=${rms.toFixed(2)}, speaking=${thresholds.speakingThreshold}, silence=${thresholds.silenceThreshold}, isSpeaking=${isSpeakingRef.current}`)
-      
+
       if (rms > thresholds.speakingThreshold) {
         // Speaking threshold を超えた場合
         if (!isSpeakingRef.current) {
@@ -131,7 +131,7 @@ export const useWaveformVisualizer = ({
       // VADしきい値線の描画
       const speakingY = (canvas.height * (100 - thresholds.speakingThreshold)) / 100
       const silenceY = (canvas.height * (100 - thresholds.silenceThreshold)) / 100
-      
+
       // Speaking threshold line (red)
       canvasCtx.strokeStyle = "rgba(239, 68, 68, 0.8)"
       canvasCtx.lineWidth = 1
@@ -140,7 +140,7 @@ export const useWaveformVisualizer = ({
       canvasCtx.moveTo(0, speakingY)
       canvasCtx.lineTo(canvas.width, speakingY)
       canvasCtx.stroke()
-      
+
       // Silence threshold line (green)
       canvasCtx.strokeStyle = "rgba(34, 197, 94, 0.8)"
       canvasCtx.beginPath()

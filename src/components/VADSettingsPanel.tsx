@@ -8,25 +8,40 @@ export const VADSettingsPanel: React.FC = () => {
   const [config] = useRBox(configBox)
   const setConfig = set(configBox)
 
+  console.log("VADSettingsPanel render - current vadSettings:", config.vadSettings)
+
   const updateVADSetting = (key: keyof typeof config.vadSettings, value: number) => {
     const newVADSettings = { ...config.vadSettings, [key]: value }
+    console.log("updateVADSetting - updating:", key, "to:", value)
+    console.log("updateVADSetting - new settings:", newVADSettings)
+
+    // 状態を更新
     setConfig({ ...config, vadSettings: newVADSettings })
+
+    // localStorage に保存
     saveVADSettings(newVADSettings)
+
+    // 保存確認
+    console.log("updateVADSetting - localStorage after save:", localStorage.getItem("vadSettings"))
   }
 
   const resetToDefaults = () => {
     const defaultSettings = {
       speakingThreshold: 25,
       silenceThreshold: 15,
-      silenceDuration: 1500,
+      silenceDuration: 10,
     }
+    console.log("resetToDefaults - resetting to:", defaultSettings)
     setConfig({ ...config, vadSettings: defaultSettings })
     saveVADSettings(defaultSettings)
+    console.log("resetToDefaults - localStorage after save:", localStorage.getItem("vadSettings"))
   }
 
   const applyPreset = (preset: typeof config.vadSettings) => {
+    console.log("applyPreset - applying preset:", preset)
     setConfig({ ...config, vadSettings: preset })
     saveVADSettings(preset)
+    console.log("applyPreset - localStorage after save:", localStorage.getItem("vadSettings"))
   }
 
   return (
@@ -43,7 +58,7 @@ export const VADSettingsPanel: React.FC = () => {
 
       {/* Calibration Panel */}
       <VADCalibrationPanel />
-      
+
       <div className="space-y-3">
         {/* Speaking Threshold */}
         <div>
@@ -88,9 +103,9 @@ export const VADSettingsPanel: React.FC = () => {
           </label>
           <input
             type="range"
-            min="500"
-            max="5000"
-            step="100"
+            min="1"
+            max="100"
+            step="1"
             value={config.vadSettings.silenceDuration}
             onChange={(e) => updateVADSetting("silenceDuration", Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -106,19 +121,19 @@ export const VADSettingsPanel: React.FC = () => {
         <p className="text-sm font-medium mb-2">Environment Presets:</p>
         <div className="flex gap-2 flex-wrap">
           <button
-            onClick={() => applyPreset({ speakingThreshold: 15, silenceThreshold: 8, silenceDuration: 1000 })}
+            onClick={() => applyPreset({ speakingThreshold: 15, silenceThreshold: 8, silenceDuration: 10 })}
             className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded transition-colors"
           >
             Quiet Room
           </button>
           <button
-            onClick={() => applyPreset({ speakingThreshold: 25, silenceThreshold: 15, silenceDuration: 1500 })}
+            onClick={() => applyPreset({ speakingThreshold: 25, silenceThreshold: 15, silenceDuration: 40 })}
             className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors"
           >
             Normal
           </button>
           <button
-            onClick={() => applyPreset({ speakingThreshold: 40, silenceThreshold: 25, silenceDuration: 2000 })}
+            onClick={() => applyPreset({ speakingThreshold: 40, silenceThreshold: 25, silenceDuration: 20 })}
             className="px-3 py-1 text-sm bg-orange-100 hover:bg-orange-200 text-orange-800 rounded transition-colors"
           >
             Noisy Environment

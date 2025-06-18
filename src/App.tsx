@@ -29,6 +29,12 @@ import { Task } from "f-box-core"
 const storedConfig = (key: keyof Config) => {
   const local = localStorage.getItem(key)
   const value = configBox.getValue()[key]
+  
+  // vadSettingsは別途loadVADSettings()で処理済みなのでスキップ
+  if (key === "vadSettings") {
+    return value
+  }
+  
   return typeof value === "boolean"
     ? local === null
       ? value
