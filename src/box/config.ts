@@ -11,5 +11,6 @@ export const configBox = RBox.pack<Config>({
   enableVAD: true,
   speechModel: "gpt-4o-mini-transcribe",
   vadSettings: loadVADSettings(),
+  recordingMode: "manual",
 })
 

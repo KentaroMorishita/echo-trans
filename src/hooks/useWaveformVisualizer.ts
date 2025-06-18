@@ -6,11 +6,13 @@ type UseWaveformVisualizerProps = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   onSpeakingDetected: () => void
   onSilenceDetected: () => void
+  onAudioLevelUpdate?: (level: number) => void
   thresholds?: {
     speakingThreshold: number
     silenceThreshold: number
   }
   silenceDuration?: number
+  isAutoMode?: boolean
 }
 
 export const useWaveformVisualizer = ({
@@ -19,11 +21,13 @@ export const useWaveformVisualizer = ({
   canvasRef,
   onSpeakingDetected,
   onSilenceDetected,
+  onAudioLevelUpdate,
   thresholds = {
     speakingThreshold: 25,
     silenceThreshold: 15,
   },
   silenceDuration = 1500,
+  isAutoMode = false,
 }: UseWaveformVisualizerProps) => {
   const animationFrameIdRef = useRef<number | null>(null)
   const silenceTimerRef = useRef<number | null>(null)
@@ -32,14 +36,18 @@ export const useWaveformVisualizer = ({
   const calculateRMS = (data: Uint8Array): number => {
     let sumSquares = 0
     for (let i = 0; i < data.length; i++) {
-      const normalized = data[i] / 128.0 - 1.0
+      const normalized = (data[i] - 128) / 128.0
       sumSquares += normalized * normalized
     }
-    return Math.sqrt(sumSquares / data.length) * 100
+    const rms = Math.sqrt(sumSquares / data.length)
+    // ノイズフロアを考慮して0から100にスケール
+    const scaled = Math.max(0, (rms - 0.001) * 100)
+    return scaled
   }
 
   useEffect(() => {
-    if (!isRecording || !analyserRef.current || !canvasRef.current) return
+    // 録音中またはオートモード時にVAD処理を実行
+    if ((!isRecording && !isAutoMode) || !analyserRef.current || !canvasRef.current) return
 
     const canvas = canvasRef.current
     const canvasCtx = canvas.getContext("2d")!
@@ -81,6 +89,13 @@ export const useWaveformVisualizer = ({
 
       // VAD処理
       const rms = calculateRMS(dataArray)
+      
+      // 音声レベルを更新
+      if (onAudioLevelUpdate) {
+        onAudioLevelUpdate(rms)
+      }
+      
+      // VAD判定
       if (rms > thresholds.speakingThreshold) {
         if (!isSpeakingRef.current) {
           isSpeakingRef.current = true
@@ -143,6 +158,7 @@ export const useWaveformVisualizer = ({
     }
   }, [
     isRecording,
+    isAutoMode,
     analyserRef,
     canvasRef,
     thresholds.speakingThreshold,
@@ -150,5 +166,6 @@ export const useWaveformVisualizer = ({
     silenceDuration,
     onSpeakingDetected,
     onSilenceDetected,
+    onAudioLevelUpdate,
   ])
 }

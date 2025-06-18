@@ -14,6 +14,8 @@ export type LanguageNameJa =
 
 export type SpeechModel = "whisper-1" | "gpt-4o-mini-transcribe"
 
+export type RecordingMode = "manual" | "auto"
+
 export type VADSettings = {
   speakingThreshold: number
   silenceThreshold: number
@@ -29,6 +31,7 @@ export type Config = {
   enableVAD: boolean
   speechModel: SpeechModel
   vadSettings: VADSettings
+  recordingMode: RecordingMode
 }
 
 export type TranslationHistory = {
