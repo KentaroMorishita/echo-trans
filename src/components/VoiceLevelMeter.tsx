@@ -14,6 +14,7 @@ export const VoiceLevelMeter: React.FC<VoiceLevelMeterProps> = ({
   const [config] = useRBox(configBox)
   const [currentLevel, setCurrentLevel] = useState(0)
   const animationFrameIdRef = useRef<number | null>(null)
+  const frameCountRef = useRef(0)
 
   const calculateRMS = (data: Uint8Array): number => {
     let sumSquares = 0
@@ -37,9 +38,13 @@ export const VoiceLevelMeter: React.FC<VoiceLevelMeterProps> = ({
     const updateLevel = () => {
       if (!analyser) return
 
-      analyser.getByteTimeDomainData(dataArray)
-      const rms = calculateRMS(dataArray)
-      setCurrentLevel(rms)
+      // フレームレートを下げて安定化（30fps → 10fps）
+      frameCountRef.current++
+      if (frameCountRef.current % 6 === 0) {
+        analyser.getByteTimeDomainData(dataArray)
+        const rms = calculateRMS(dataArray)
+        setCurrentLevel(rms)
+      }
 
       animationFrameIdRef.current = requestAnimationFrame(updateLevel)
     }
@@ -58,50 +63,28 @@ export const VoiceLevelMeter: React.FC<VoiceLevelMeterProps> = ({
   const isSpeaking = currentLevel > speakingThreshold
   const isSilent = currentLevel < silenceThreshold
 
-  return (
-    <div className="flex flex-col items-center gap-2 min-w-[120px]">
-      {/* 数値表示 */}
-      <div className="text-sm font-mono text-center">
-        <div className={`font-bold ${isSpeaking ? 'text-blue-600' : isSilent ? 'text-green-600' : 'text-yellow-600'}`}>
-          {currentLevel.toFixed(1)}
-        </div>
-        <div className="text-xs text-gray-500">Level</div>
-      </div>
+  if (!isRecording) {
+    return null // 録音中でない場合は非表示
+  }
 
-      {/* バーメーター */}
-      <div className="relative w-16 h-24 bg-gray-200 rounded border">
-        {/* 現在のレベル */}
+  return (
+    <div className="flex items-center gap-1">
+      {/* 極小バーメーター */}
+      <div className="relative w-1.5 h-6 bg-gray-200 rounded-full">
         <div
-          className={`absolute bottom-0 w-full rounded transition-all duration-100 ${
+          className={`absolute bottom-0 w-full rounded-full transition-all duration-100 ${
             isSpeaking ? 'bg-blue-500' : isSilent ? 'bg-green-500' : 'bg-yellow-500'
           }`}
           style={{
-            height: `${Math.min(100, Math.max(0, currentLevel))}%`,
-          }}
-        />
-        
-        {/* Speaking threshold line */}
-        <div
-          className="absolute w-full border-t-2 border-red-500 border-dashed"
-          style={{
-            bottom: `${Math.min(100, Math.max(0, speakingThreshold))}%`,
-          }}
-        />
-        
-        {/* Silence threshold line */}
-        <div
-          className="absolute w-full border-t-2 border-green-500 border-dashed"
-          style={{
-            bottom: `${Math.min(100, Math.max(0, silenceThreshold))}%`,
+            height: `${Math.min(100, Math.max(2, currentLevel))}%`,
           }}
         />
       </div>
 
-      {/* しきい値表示 */}
-      <div className="text-xs text-center text-gray-500">
-        <div>Speak: {speakingThreshold}</div>
-        <div>Silence: {silenceThreshold}</div>
-      </div>
+      {/* 数値表示 */}
+      <span className={`text-xs font-mono w-6 text-right ${isSpeaking ? 'text-blue-600' : isSilent ? 'text-green-600' : 'text-yellow-600'}`}>
+        {currentLevel.toFixed(0).padStart(2, ' ')}
+      </span>
     </div>
   )
 }
