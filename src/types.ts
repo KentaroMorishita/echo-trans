@@ -14,6 +14,12 @@ export type LanguageNameJa =
 
 export type SpeechModel = "whisper-1" | "gpt-4o-mini-transcribe"
 
+export type VADSettings = {
+  speakingThreshold: number
+  silenceThreshold: number
+  silenceDuration: number
+}
+
 export type Config = {
   apiKey: string
   apiKeyVisible: boolean
@@ -22,6 +28,7 @@ export type Config = {
   selectedDeviceId: string
   enableVAD: boolean
   speechModel: SpeechModel
+  vadSettings: VADSettings
 }
 
 export type TranslationHistory = {

@@ -1,7 +1,10 @@
 import React, { useRef } from "react"
 import { FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa"
+import { useRBox } from "f-box-react"
 import { useAudioRecorder } from "../hooks/useAudioRecorder"
 import { useWaveformVisualizer } from "../hooks/useWaveformVisualizer"
+import { VoiceLevelMeter } from "./VoiceLevelMeter"
+import { configBox } from "../box/config"
 
 export type AudioRecorderProps = {
   onAudioData: (data: Blob) => void
@@ -10,6 +13,7 @@ export type AudioRecorderProps = {
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onAudioData,
 }) => {
+  const [config] = useRBox(configBox)
   const {
     isRecording,
     isSpeaking,
@@ -20,46 +24,53 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  // 波形描画とVADの初期化
+  // 波形描画とVADの初期化（設定から動的に取得）
   useWaveformVisualizer({
     isRecording,
     analyserRef,
     canvasRef,
     onSpeakingDetected: () => console.log("Speaking detected"),
     onSilenceDetected: () => console.log("Silence detected"),
+    thresholds: {
+      speakingThreshold: config.vadSettings.speakingThreshold,
+      silenceThreshold: config.vadSettings.silenceThreshold,
+    },
+    silenceDuration: config.vadSettings.silenceDuration,
   })
 
   return (
     <div className="flex flex-wrap items-center gap-4">
       {/* 録音コントロール */}
-      <button
-        onClick={startRecording}
-        disabled={isRecording}
-        className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
-          isRecording
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
-        } shadow-lg text-white`}
-      >
-        <FaMicrophone className="mr-2 text-lg" />
-        <span className="font-medium">Start</span>
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={startRecording}
+          disabled={isRecording}
+          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
+            isRecording
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } shadow-lg text-white`}
+        >
+          <FaMicrophone className="mr-2 text-lg" />
+          <span className="font-medium">Start</span>
+        </button>
 
-      <button
-        onClick={stopRecording}
-        disabled={!isRecording}
-        className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
-          !isRecording
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-red-600 hover:bg-red-700"
-        } shadow-lg text-white`}
-      >
-        <FaStop className="mr-2 text-lg" />
-        <span className="font-medium">Stop</span>
-      </button>
+        <button
+          onClick={stopRecording}
+          disabled={!isRecording}
+          className={`flex items-center justify-center px-4 py-2 rounded-full transition-all duration-300 ${
+            !isRecording
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
+          } shadow-lg text-white`}
+        >
+          <FaStop className="mr-2 text-lg" />
+          <span className="font-medium">Stop</span>
+        </button>
+      </div>
 
       {/* VADの状態表示 */}
-      <div>
+      <div className="flex items-center gap-2">
         {isSpeaking ? (
           <FaVolumeUp className="text-blue-500 text-2xl" title="Speaking" />
         ) : (
@@ -67,10 +78,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         )}
       </div>
 
+      {/* 音声レベルメーター */}
+      <VoiceLevelMeter isRecording={isRecording} analyserRef={analyserRef} />
+
       {/* 波形描画用のキャンバス */}
       <canvas
         ref={canvasRef}
-        className="w-80 h-12 bg-gray-500 rounded-full shadow-inner"
+        className="w-80 h-16 bg-gray-500 rounded-lg shadow-inner"
       />
     </div>
   )

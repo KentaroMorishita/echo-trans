@@ -100,6 +100,32 @@ export const useWaveformVisualizer = ({
         }
       }
 
+      // VADしきい値線の描画
+      const speakingY = (canvas.height * (100 - thresholds.speakingThreshold)) / 100
+      const silenceY = (canvas.height * (100 - thresholds.silenceThreshold)) / 100
+      
+      // Speaking threshold line (red)
+      canvasCtx.strokeStyle = "rgba(239, 68, 68, 0.8)"
+      canvasCtx.lineWidth = 1
+      canvasCtx.setLineDash([5, 5])
+      canvasCtx.beginPath()
+      canvasCtx.moveTo(0, speakingY)
+      canvasCtx.lineTo(canvas.width, speakingY)
+      canvasCtx.stroke()
+      
+      // Silence threshold line (green)
+      canvasCtx.strokeStyle = "rgba(34, 197, 94, 0.8)"
+      canvasCtx.beginPath()
+      canvasCtx.moveTo(0, silenceY)
+      canvasCtx.lineTo(canvas.width, silenceY)
+      canvasCtx.stroke()
+      canvasCtx.setLineDash([])
+
+      // 現在の音声レベル表示
+      const currentLevelY = (canvas.height * (100 - rms)) / 100
+      canvasCtx.fillStyle = isSpeakingRef.current ? "rgba(59, 130, 246, 0.8)" : "rgba(156, 163, 175, 0.8)"
+      canvasCtx.fillRect(canvas.width - 10, currentLevelY, 8, canvas.height - currentLevelY)
+
       animationFrameIdRef.current = requestAnimationFrame(drawWaveform)
     }
 
