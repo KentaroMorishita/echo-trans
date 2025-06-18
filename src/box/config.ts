@@ -8,5 +8,6 @@ export const configBox = RBox.pack<Config>({
   toLang: "en",
   selectedDeviceId: "",
   enableVAD: true,
+  speechModel: "gpt-4o-mini-transcribe",
 })
 

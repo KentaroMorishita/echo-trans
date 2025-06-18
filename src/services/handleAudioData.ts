@@ -7,10 +7,10 @@ export const handleAudioData = (data: Either<Error, Blob>) =>
   Task.tryCatch<Either<Error, string>>(() => {
     if (Either.isLeft(data)) return data
 
-    const { apiKey } = configBox.getValue()
+    const { apiKey, speechModel } = configBox.getValue()
     const body = new FormData()
     body.append("file", data.getValue(), "audio.wav")
-    body.append("model", "whisper-1")
+    body.append("model", speechModel)
 
     return fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",

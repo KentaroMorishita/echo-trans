@@ -4,6 +4,7 @@ import { ApiKeyManager } from "./ApiKeyManager"
 import { LanguageSelector } from "./LanguageSelector"
 import { VADSelector } from "./VADSelector"
 import { AudioDeviceSelector } from "./AudioDeviceSelector"
+import { SpeechModelSelector } from "./SpeechModelSelector"
 import { When } from "./Match"
 
 export type SettingsModalProps = {
@@ -29,6 +30,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <h2 className="text-xl font-semibold mb-4">Settings</h2>
           <div className="space-y-4">
             <ApiKeyManager />
+            <SpeechModelSelector />
             <div className="flex gap-2">
               <LanguageSelector label="From Language" localKey="fromLang" />
               <LanguageSelector label="To Language" localKey="toLang" />

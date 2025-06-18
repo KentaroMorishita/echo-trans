@@ -12,6 +12,8 @@ export type LanguageNameJa =
   | "中国語"
   | "韓国語"
 
+export type SpeechModel = "whisper-1" | "gpt-4o-mini-transcribe"
+
 export type Config = {
   apiKey: string
   apiKeyVisible: boolean
@@ -19,6 +21,7 @@ export type Config = {
   toLang: Language
   selectedDeviceId: string
   enableVAD: boolean
+  speechModel: SpeechModel
 }
 
 export type TranslationHistory = {
